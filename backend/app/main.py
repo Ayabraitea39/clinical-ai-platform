@@ -1,19 +1,23 @@
 ﻿from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+from .routers.auth import router as auth_router
+from .routers.patients import router as patients_router
 
 app = FastAPI(title="Clinical AI Assistant Platform")
 
-@app.get("/", response_class=HTMLResponse)
-def home():
-    return """
-    <html>
-        <body style="font-family: sans-serif; text-align: center; margin-top: 100px;">
-            <h1>✅ Backend is running</h1>
-            <p>FastAPI is working correctly.</p>
-        </body>
-    </html>
-    """
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/health")
-def health():
+app.include_router(auth_router)
+app.include_router(patients_router)   
+
+
+@app.get("/")
+def health_check():
     return {"status": "ok"}

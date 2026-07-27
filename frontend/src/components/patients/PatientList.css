@@ -1,0 +1,108 @@
+ :root{
+    --blue:#16213e;
+    --grey:#cbd5e1;
+    --active-blue:#2b3a67;
+    --white:#fff;
+ }
+
+.patient-table {
+  background:var(--white);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.patient-table-header,
+.patient-table-row {
+  display: grid;
+  grid-template-columns: 0.8fr 1.5fr 1.3fr 0.9fr 0.9fr 2.2fr 1.1fr 0.9fr;
+  align-items: center;
+  padding: 16px 20px;
+}
+
+.patient-table-header {
+  background: var(--blue);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.patient-table-row {
+  border-top: 1px solid #f1f5f9;
+  font-size: 14px;
+  color: #334155;
+}
+
+.patient-id {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.patient-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.patient-age {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.patient-blood-type {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.patient-conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.condition-tag {
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.open-btn {
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  background: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.open-btn:hover {
+  background: #eff6ff;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.edit-btn {
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  background: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background: #f1f5f9;
+}
