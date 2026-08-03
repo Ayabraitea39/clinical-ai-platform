@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Stethoscope, Users, LogOut } from "lucide-react";
+import { Stethoscope, Users, LogOut, ClipboardList, Pill } from "lucide-react";
 import "./Sidebar.css";
 
 function Sidebar({ patientCount }) {
@@ -49,6 +49,26 @@ function Sidebar({ patientCount }) {
           <span className="sidebar-link-content">
             <Users size={18} />
             Patient List
+          </span>
+        </NavLink>
+
+        <NavLink
+          to="/icd10-codes"
+          className={({ isActive }) => "sidebar-link" + (isActive ? " active" : "")}
+        >
+          <span className="sidebar-link-content">
+            <ClipboardList size={18} />
+            ICD-10 Codes
+          </span>
+        </NavLink>
+
+        <NavLink
+          to="/medical-acts"
+          className={({ isActive }) => "sidebar-link" + (isActive ? " active" : "")}
+        >
+          <span className="sidebar-link-content">
+            <Pill size={18} />
+            Medical Acts
           </span>
         </NavLink>
       </nav>

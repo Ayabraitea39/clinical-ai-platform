@@ -1,0 +1,562 @@
+.visit-card-page {
+  width: 100%;
+  margin: 0;
+  padding: 20px 20px 64px 16px;
+  color: #0f172a;
+  background: #f8fafc;
+  box-sizing: border-box;
+}
+
+.visit-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.visit-card-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.visit-card-header h1 {
+  margin: 0;
+  font-size: 22px;
+  color: #0f172a;
+}
+
+.empty-hint {
+  color: #64748b;
+  font-size: 14px;
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* =====================================================================
+   2. ROLE BADGE  (Doctor view / Staff view, top-right of header)
+   ===================================================================== */
+
+.role-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.role-doctor {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.role-staff {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* =====================================================================
+   3. CATEGORY TABS  (Overview / Allergies / Medications style tabs)
+   ===================================================================== */
+
+.sign-category-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+
+.sign-category-tab {
+  background: none;
+  border: none;
+  padding: 10px 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.sign-category-tab:hover {
+  color: #475569;
+}
+
+.sign-category-tab.active {
+  color: #0f172a;
+  border-bottom-color: #0f172a;
+}
+
+/* =====================================================================
+   4. CATEGORY GRID  (arranges section cards: full-width / two-column)
+   ===================================================================== */
+
+.sign-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.sign-categories-grid.full-width-row {
+  grid-template-columns: 1fr;
+}
+
+.sign-categories-grid.two-col-row {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 720px) {
+  .sign-categories-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =====================================================================
+   5. SECTION CARDS  (e.g. "Vitals", "Chief Complaint" containers)
+   ===================================================================== */
+
+.patient-card-section {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid var(--section-accent, #cbd5e1);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.patient-card-section h3 {
+  margin: 0 0 18px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.patient-card-section h3::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--section-accent, #cbd5e1);
+  flex-shrink: 0;
+}
+
+/* Each category gets its own accent color so sections read as distinct
+   at a glance. Cycles through 6 colors, repeating after that. */
+.sign-categories-grid .patient-card-section:nth-of-type(6n + 1) {
+  --section-accent: #3b82f6; /* blue */
+}
+.sign-categories-grid .patient-card-section:nth-of-type(6n + 2) {
+  --section-accent: #10b981; /* green */
+}
+.sign-categories-grid .patient-card-section:nth-of-type(6n + 3) {
+  --section-accent: #f59e0b; /* amber */
+}
+.sign-categories-grid .patient-card-section:nth-of-type(6n + 4) {
+  --section-accent: #a855f7; /* purple */
+}
+.sign-categories-grid .patient-card-section:nth-of-type(6n + 5) {
+  --section-accent: #ef4444; /* red */
+}
+.sign-categories-grid .patient-card-section:nth-of-type(6n + 6) {
+  --section-accent: #06b6d4; /* cyan */
+}
+
+/* =====================================================================
+   6. EDITABLE FORM FIELDS  (VisitFillPage — inputs, selects, textareas)
+   ===================================================================== */
+
+.sign-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sign-description {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.field-row input[type="text"],
+.field-row input[type="number"],
+.field-row input[type="date"],
+.field-row select,
+.field-row textarea {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.field-row input:focus,
+.field-row select:focus,
+.field-row textarea:focus {
+  outline: none;
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.field-row input:disabled,
+.field-row select:disabled {
+  background: #f8fafc;
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.conclusion-textarea {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+/* Multi-select checkbox pills (Physical Exam etc.) */
+.multi-select-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 2px;
+}
+
+.multi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.multi-select-option:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.multi-select-option input[type="checkbox"] {
+  accent-color: #0f172a;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.multi-select-option:has(input:checked) {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+/* =====================================================================
+   7. READ-ONLY VIEW FIELDS  (VisitcardPage — label/value display rows)
+   ===================================================================== */
+
+.view-field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid #f1f5f9;
+  font-size: 14px;
+}
+
+.view-field-row:first-of-type {
+  border-top: none;
+}
+
+.view-field-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.view-field-value {
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+}
+
+.conclusion-text {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+/* =====================================================================
+   8. ACTIONS  (Save / Cancel / Edit buttons, save confirmation message)
+   ===================================================================== */
+
+.visit-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.saved-message {
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.btn-primary,
+.btn-secondary {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+ /* transition: background 0.15s, opacity 0.15s;*/
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary {
+  background: #0f172a;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #1e293b;
+  
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background:#334155;
+  color: #fff;
+  border-color: #e2e8f0;
+}
+
+
+/* =====================================================================
+   9. ENTRY LISTS  (Prescriptions — cards inside a section)
+   ===================================================================== */
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+.add-entry-btn {
+  background: #eff6ff;
+  color: #2563eb;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.add-entry-btn:hover {
+  background: #dbeafe;
+}
+
+.entries-scroll {
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.entries-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.entries-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+
+.entries-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.history-entry {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.history-entry:last-child {
+  margin-bottom: 0;
+}
+
+.history-entry .field-row {
+  border-top: 1px solid #e2e8f0;
+  padding: 8px 0;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-entry .field-row:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.history-entry .field-label {
+  font-size: 11px;
+}
+
+.history-entry .field-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+}
+
+.field-value-lg {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 2px 0 8px;
+}
+
+.entry-remove-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.entry-remove-btn:hover {
+  text-decoration: underline;
+}
+
+.attached-files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.attached-files-grid .history-entry {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.attached-files-grid .history-entry:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.attached-file-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.attached-file-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.attached-file-size {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.attached-file-link {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  text-decoration: none;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+}
+
+.attached-file-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.attached-file-size {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  padding-left: 44px;
+}

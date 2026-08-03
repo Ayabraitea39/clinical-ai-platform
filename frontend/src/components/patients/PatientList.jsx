@@ -1,5 +1,8 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./PatientList.css";
+
+const BLOOD_TYPE_OPTIONS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 function calculateAge(dob) {
   const birthDate = new Date(dob);
@@ -13,8 +16,75 @@ function calculateAge(dob) {
 }
 
 function PatientList({ patients, onEdit }) {
+  const [genderFilter, setGenderFilter] = useState("");
+  const [bloodTypeFilter, setBloodTypeFilter] = useState("");
+  const [ageFilter, setAgeFilter] = useState("");
+
+  const filteredPatients = useMemo(() => {
+    return patients.filter((p) => {
+      if (genderFilter && p.gender !== genderFilter) return false;
+      if (bloodTypeFilter && p.blood_type !== bloodTypeFilter) return false;
+
+      if (ageFilter !== "" && calculateAge(p.date_of_birth) !== Number(ageFilter)) return false;
+
+      return true;
+    });
+  }, [patients, genderFilter, bloodTypeFilter, ageFilter]);
+
+  function clearFilters() {
+    setGenderFilter("");
+    setBloodTypeFilter("");
+    setAgeFilter("");
+  }
+
+  const hasActiveFilters = genderFilter || bloodTypeFilter || ageFilter !== "";
+
   return (
     <div className="patient-table">
+      <div className="patient-filters">
+        <select
+          value={genderFilter}
+          onChange={(e) => setGenderFilter(e.target.value)}
+          className="filter-select"
+        >
+          <option value="">Genders</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+
+        <select
+          value={bloodTypeFilter}
+          onChange={(e) => setBloodTypeFilter(e.target.value)}
+          className="filter-select"
+        >
+          <option value="">Blood types</option>
+          {BLOOD_TYPE_OPTIONS.map((bt) => (
+            <option key={bt} value={bt}>
+              {bt}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          min="0"
+          placeholder="Age"
+          value={ageFilter}
+          onChange={(e) => setAgeFilter(e.target.value)}
+          className="filter-input age-input"
+        />
+
+        {hasActiveFilters && (
+          <button className="clear-filters-btn" onClick={clearFilters}>
+            Clear filters
+          </button>
+        )}
+
+        <span className="filter-result-count">
+          {filteredPatients.length} of {patients.length}
+        </span>
+      </div>
+
       <div className="patient-table-header">
         <div>Patient ID</div>
         <div>Full Name</div>
@@ -26,7 +96,7 @@ function PatientList({ patients, onEdit }) {
         <div></div>
       </div>
 
-      {patients.map((p) => (
+      {filteredPatients.map((p) => (
         <div className="patient-table-row" key={p.id}>
           <div className="patient-id">P-{String(p.id).padStart(3, "0")}</div>
           <div className="patient-name">{p.full_name}</div>
@@ -37,10 +107,10 @@ function PatientList({ patients, onEdit }) {
           <div className="patient-blood-type">{p.blood_type}</div>
 
           <div className="patient-conditions">
-            <span style={{ color: "#94a3b8" }}>—</span>
+            {p.condition || <span style={{ color: "#94a3b8" }}>—</span>}
           </div>
 
-          <div>—</div>
+          <div>{p.last_visit || "—"}</div>
 
           <div className="row-actions">
             <button className="edit-btn" onClick={() => onEdit(p)}>Edit</button>
@@ -48,6 +118,10 @@ function PatientList({ patients, onEdit }) {
           </div>
         </div>
       ))}
+
+      {filteredPatients.length === 0 && (
+        <div className="patient-table-empty">No patients match these filters.</div>
+      )}
     </div>
   );
 }

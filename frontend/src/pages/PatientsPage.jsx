@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPatients } from "../api/patients";
+import { getPatientVisits } from "../api/visit";
 import PatientList from "../components/patients/PatientList";
 import PatientFormModal from "../components/patients/PatientFormModal";
 import "./PatientsPage.css";
@@ -11,7 +12,21 @@ function PatientsPage() {
   const [editingPatient, setEditingPatient] = useState(null);
 
   useEffect(() => {
-    getPatients().then(setPatients);
+    async function loadPatientsWithVisits() {
+      const patientList = await getPatients();
+
+      const enriched = await Promise.all(
+        patientList.map(async (p) => {
+          const visits = await getPatientVisits(p.id);
+          const lastVisit = visits.length > 0 ? visits[0].visit_date : null;
+          return { ...p, last_visit: lastVisit };
+        })
+      );
+
+      setPatients(enriched);
+    }
+
+    loadPatientsWithVisits();
   }, []);
 
   const filtered = patients.filter((p) =>
@@ -32,8 +47,8 @@ function PatientsPage() {
     setPatients((prev) => {
       const exists = prev.some((p) => p.id === savedPatient.id);
       return exists
-        ? prev.map((p) => (p.id === savedPatient.id ? savedPatient : p))
-        : [...prev, savedPatient];
+        ? prev.map((p) => (p.id === savedPatient.id ? { ...p, ...savedPatient } : p))
+        : [...prev, { ...savedPatient, last_visit: null }];
     });
   }
 

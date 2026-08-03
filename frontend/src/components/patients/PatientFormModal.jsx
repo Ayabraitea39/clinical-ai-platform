@@ -12,6 +12,7 @@ const emptyForm = {
   phone: "",
   email: "",
   address: "",
+  condition: "",
 };
 
 function PatientFormModal({ patient, onClose, onSaved }) {
@@ -30,6 +31,7 @@ function PatientFormModal({ patient, onClose, onSaved }) {
         phone: patient.phone || "",
         email: patient.email || "",
         address: patient.address || "",
+        condition: patient.condition || "",
       });
     } else {
       setForm(emptyForm);
@@ -157,6 +159,15 @@ function PatientFormModal({ patient, onClose, onSaved }) {
               <label>Address</label>
               <input name="address" value={form.address} onChange={handleChange} required />
             </div>
+          </div>
+
+          <div className="form-field full-width">
+            <label>Condition</label>
+            <input
+              name="condition"
+              value={form.condition}
+              onChange={handleChange}
+            />
           </div>
 
           <div className="modal-actions">

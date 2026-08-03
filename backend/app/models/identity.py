@@ -1,8 +1,12 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, Date, ForeignKey, Text, Enum
 from typing import Optional
 import datetime
 import enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .medicalAct import InsuranceCoverage
 
 class SocialStatus(str, enum.Enum):
     single = "single"
@@ -39,6 +43,9 @@ class Patient(Base):
     phone: Mapped[str] = mapped_column(String(30))
     email: Mapped[str] = mapped_column(String(255))
     address: Mapped[str] = mapped_column(Text)
+    condition: Mapped[str] = mapped_column(String(255), nullable=False)
+    insurance_coverage: Mapped[list["InsuranceCoverage"]] = relationship(back_populates="patient")
+
 
 class Doctor(Base):
     __tablename__ = "doctors"
