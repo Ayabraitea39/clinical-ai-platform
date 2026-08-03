@@ -7,27 +7,6 @@ export const ROLE_OPTIONS = [
   { value: "doctor", label: "Doctor" },
 ];
 
-export const SPECIALTY_OPTIONS = [
-  "General Practice",
-  "Internal Medicine",
-  "Cardiology",
-  "Dermatology",
-  "Endocrinology",
-  "Gastroenterology",
-  "Neurology",
-  "Obstetrics & Gynecology",
-  "Oncology",
-  "Ophthalmology",
-  "Orthopedics",
-  "Pediatrics",
-  "Psychiatry",
-  "Pulmonology",
-  "Radiology",
-  "Surgery",
-  "Urology",
-  "Other",
-];
-
 export function inputClass(hasError, extra = "") {
   return "auth-input" + (hasError ? " error" : "") + (extra ? " " + extra : "");
 }

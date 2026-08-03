@@ -1,0 +1,83 @@
+.disease-list-page {
+  padding: 28px 32px;
+}
+
+.disease-list-header {
+  margin-bottom: 20px;
+}
+
+.disease-list-header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.disease-search-wrap {
+  margin-bottom: 16px;
+}
+
+.disease-search-input {
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+
+.disease-search-input:focus {
+  border-color: #2b3a67;
+}
+
+.disease-table {
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.disease-table-header,
+.disease-table-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: center;
+  padding: 14px 20px;
+}
+
+.disease-table-header {
+  background: #16213e;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.disease-table-row {
+  border-top: 2px solid #e2e8f0;
+  font-size: 14px;
+  color: #334155;
+}
+
+.disease-code {
+  font-family: monospace;
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.disease-explanation {
+  color: #334155;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.disease-table-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}

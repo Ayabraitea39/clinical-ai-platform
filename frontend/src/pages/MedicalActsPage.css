@@ -1,0 +1,110 @@
+.medical-acts-page {
+  padding: 28px 32px;
+}
+
+.medical-acts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.medical-acts-header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* Tabs: same underline-on-active convention used on PatientCardPage */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  color: #0f172a;
+}
+
+.tab.active {
+  color: #16213e;
+  border-bottom-color: #2b3a67;
+}
+
+.medical-acts-search-wrap {
+  margin-bottom: 16px;
+}
+
+.medical-acts-search-input {
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+
+.medical-acts-search-input:focus {
+  border-color: #2b3a67;
+}
+
+.medical-acts-table {
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.medical-acts-table-header,
+.medical-acts-table-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  padding: 14px 20px;
+}
+
+.medical-acts-table-header {
+  background: #16213e;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.medical-acts-table-row {
+  border-top: 2px solid #e2e8f0;
+  font-size: 14px;
+  color: #334155;
+}
+
+.medical-acts-name {
+  color: #334155;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.medical-acts-table-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
