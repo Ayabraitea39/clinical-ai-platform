@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getPatientById } from "../api/patients";
-import { getPatientVisits, getSignForm, getVisitSigns } from "../api/visit";
+import { getPatientVisits, getSignForm, getVisitSigns, updateVisitStatus } from "../api/visit";
 import VisitModal from "../components/patients/VisitModal";
 import "./PatientFilePage.css";
 
@@ -15,6 +15,11 @@ function calculateAge(dob) {
   }
   return age;
 }
+
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 async function loadVisitSigns(visitId) {
   const [form, recorded] = await Promise.all([
@@ -38,6 +43,36 @@ async function loadVisitSigns(visitId) {
   });
 
   return signs;
+}
+
+function VisitStatusSelect({ visitId, status, onChanged }) {
+  const [saving, setSaving] = useState(false);
+
+  async function handleChange(e) {
+    const newStatus = e.target.value;
+    setSaving(true);
+    try {
+      await updateVisitStatus(visitId, newStatus);
+      onChanged(visitId, newStatus);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <select
+      className={`visit-status-select visit-status-${status}`}
+      value={status}
+      disabled={saving}
+      onChange={handleChange}
+    >
+      {STATUS_OPTIONS.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  );
 }
 
 function PatientFilePage() {
@@ -69,6 +104,12 @@ function PatientFilePage() {
       }
     );
   }, [id]);
+
+  function handleStatusChanged(visitId, newStatus) {
+    setVisits((prev) =>
+      prev.map((v) => (v.id === visitId ? { ...v, status: newStatus } : v))
+    );
+  }
 
   if (loading) return <div className="patient-file-page">Loading...</div>;
   if (!patient) return <div className="patient-file-page">Patient not found.</div>;
@@ -104,9 +145,13 @@ function PatientFilePage() {
           <div className="visit-timeline">
             {visits.map((v) => {
               const signs = visitSignsById[v.id];
+              const status = v.status || "active";
 
               return (
-                <Link to={`/visits/${v.id}`} className="visit-timeline-item" key={v.id}>
+                <div
+                  className={`visit-timeline-item ${status === "cancelled" ? "visit-timeline-item-cancelled" : ""}`}
+                  key={v.id}
+                >
                   <div className="visit-timeline-date">
                     <span className="visit-timeline-day">
                       {new Date(v.visit_date).toLocaleDateString(undefined, {
@@ -124,6 +169,18 @@ function PatientFilePage() {
                         {v.visit_type}
                       </span>
                       <span className="visit-timeline-doctor">Dr. {v.doctor_name}</span>
+
+                      <span className="visit-timeline-status-wrap">
+                        <VisitStatusSelect
+                          visitId={v.id}
+                          status={status}
+                          onChanged={handleStatusChanged}
+                        />
+                      </span>
+
+                      <Link to={`/visits/${v.id}`} className="visit-timeline-view-link">
+                        View &rarr;
+                      </Link>
                     </div>
 
                     {signs === undefined ? (
@@ -145,7 +202,7 @@ function PatientFilePage() {
                       <p className="visit-timeline-conclusion empty">No conclusion recorded yet.</p>
                     )}
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>

@@ -82,6 +82,8 @@ class CurrentMedication(Base):
     medicine_name: Mapped[str] = mapped_column(String(255))
     dose: Mapped[Optional[str]] = mapped_column(String(100))
     frequency: Mapped[Optional[str]] = mapped_column(String(100))
+    start_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
+    duration: Mapped[Optional[str]] = mapped_column(String(50))
 
 
 class AttachedFile(Base):

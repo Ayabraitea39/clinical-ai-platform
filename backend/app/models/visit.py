@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Mapped, mapped_column,relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Date, ForeignKey, Text, Enum, Integer
 from typing import Optional
 import datetime
@@ -12,6 +12,12 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .medicalAct import Prescription, Order, BillingLine
 
+
+class VisitStatus(str, enum.Enum):
+    active = "active"
+    cancelled = "cancelled"
+
+
 class Visit(Base):
     __tablename__ = "visits"
 
@@ -21,10 +27,13 @@ class Visit(Base):
     visit_date: Mapped[datetime.date] = mapped_column(Date)
     visit_type: Mapped[str] = mapped_column(String(100))
     conclusion: Mapped[Optional[str]] = mapped_column(Text)
+    status: Mapped[VisitStatus] = mapped_column(Enum(VisitStatus), default=VisitStatus.active, server_default=VisitStatus.active.value)
 
     prescriptions: Mapped[list["Prescription"]] = relationship(back_populates="visit")
     orders: Mapped[list["Order"]] = relationship(back_populates="visit")
     billing_lines: Mapped[list["BillingLine"]] = relationship(back_populates="visit")
+
+
 class SignCategory(Base):
     __tablename__ = "sign_categories"
  
@@ -59,4 +68,4 @@ class VisitSign(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     visit_id: Mapped[int] = mapped_column(ForeignKey("visits.id"), nullable=False)
     sign_definition_id: Mapped[int] = mapped_column(ForeignKey("sign_definitions.id"), nullable=False)
-    value: Mapped[Optional[str]] = mapped_column(Text) 
+    value: Mapped[Optional[str]] = mapped_column(Text)

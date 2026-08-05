@@ -347,45 +347,28 @@
   color: #16a34a;
   font-weight: 500;
 }
-
-.btn-primary,
-.btn-secondary {
-  font-size: 14px;
-  font-weight: 600;
-  padding: 9px 18px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  cursor: pointer;
- /* transition: background 0.15s, opacity 0.15s;*/
-  text-decoration: none;
-  display: inline-block;
-}
-
-.btn-primary {
-  background: #0f172a;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: #1e293b;
-  
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background:#334155;
+.btn-secondary,
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active,
+.btn-secondary:focus-visible {
+  background: #334155;
   color: #fff;
   border-color: #e2e8f0;
+  outline: none;
+  box-shadow: none;
 }
 
-
-/* =====================================================================
-   9. ENTRY LISTS  (Prescriptions — cards inside a section)
-   ===================================================================== */
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary:focus-visible {
+  background: #0f172a;
+  color: #fff;
+  outline: none;
+  box-shadow: none;
+}
 
 .section-header {
   display: flex;
@@ -437,8 +420,15 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 14px 16px;
+  padding: 10px 12px;
   margin-bottom: 10px;
+     width: 300px;
+    
+}
+.entries-scroll {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .history-entry:last-child {
@@ -559,4 +549,55 @@
   color: #94a3b8;
   font-weight: 500;
   padding-left: 44px;
+}
+
+.medical-act-menu {
+  position: relative;
+}
+
+.medical-act-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.medical-act-menu-trigger span {
+  font-size: 10px;
+}
+
+.medical-act-menu-dropdown {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 180px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #dbe3ee;
+  border-radius: 9px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+}
+
+.medical-act-menu-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.medical-act-menu-dropdown button:hover:not(:disabled) {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.medical-act-menu-dropdown button:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
 }

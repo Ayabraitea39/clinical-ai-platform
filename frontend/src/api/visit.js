@@ -49,3 +49,8 @@ export async function updateConclusion(visitId, conclusion) {
   const res = await axiosClient.put(`/visits/${visitId}/conclusion`, { conclusion });
   return res.data;
 }
+
+export async function updateVisitStatus(visitId, status) {
+  const res = await axiosClient.put(`/visits/${visitId}/status`, { status });
+  return res.data;
+}

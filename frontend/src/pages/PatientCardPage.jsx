@@ -122,8 +122,24 @@ const CATEGORY_META = {
     sectionTitle: "Medications",
     fields: [
       { key: "medicine_name", label: "Medicine name", type: "text", required: true },
+      { key: "start_date", label: "Start date", type: "date" },
       { key: "dose", label: "Dosage", type: "text" },
       { key: "frequency", label: "Frequency", type: "text" },
+      {
+        key: "duration",
+        label: "Duration",
+        type: "select",
+        options: [
+          "1 week",
+          "2 weeks",
+          "1 month",
+          "2 months",
+          "3 months",
+          "6 months",
+          "1 year",
+          "Ongoing / Indefinite",
+        ],
+      },
     ],
   },
   // habits intentionally has no entry in CATEGORY_API below — there's no

@@ -17,6 +17,7 @@ class VisitOut(BaseModel):
     visit_date: datetime.date
     visit_type: str
     conclusion: Optional[str] = None
+    status: str
 
     class Config:
         from_attributes = True
@@ -28,6 +29,11 @@ class VisitListItem(BaseModel):
     visit_type: str
     doctor_name: str
     conclusion: Optional[str] = None
+    status: str
+
+
+class VisitStatusUpdate(BaseModel):
+    status: str
 
 
 class VisitSignCreate(BaseModel):

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, Numeric, Text, Enum
+from sqlalchemy import String, ForeignKey, Numeric, Text, Enum,Date
 from typing import Optional,TYPE_CHECKING
-import enum
+import enum,datetime
 
 from .identity import Base
 if TYPE_CHECKING:
@@ -45,6 +45,7 @@ class Prescription(Base):
     dose: Mapped[Optional[str]] = mapped_column(String(100))
     frequency: Mapped[Optional[str]] = mapped_column(String(100))
     route: Mapped[Optional[str]] = mapped_column(String(100))
+    start_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
     duration: Mapped[Optional[str]] = mapped_column(String(100))
 
     visit: Mapped["Visit"] = relationship(back_populates="prescriptions")

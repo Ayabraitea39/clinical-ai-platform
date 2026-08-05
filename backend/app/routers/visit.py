@@ -18,6 +18,7 @@ from ..schemas.visit import (
     VisitListItem,
     VisitSignsCreate,
     ConclusionUpdate,
+    VisitStatusUpdate,
     SignCategoryCreate,
     SignCategoryOut,
     SignDefinitionCreate,
@@ -68,6 +69,7 @@ def list_visits_for_patient(patient_id: int, db: Session = Depends(get_db)):
             visit_type=visit.visit_type,
             doctor_name=doctor_name,
             conclusion=visit.conclusion,
+            status=visit.status.value,
         )
         for visit, doctor_name in rows
     ]
@@ -203,3 +205,28 @@ def update_conclusion(
 
     return visit
 
+
+@router.put("/{visit_id}/status", response_model=VisitOut)
+def update_visit_status(
+    visit_id: int,
+    payload: VisitStatusUpdate,
+    db: Session = Depends(get_db),
+):
+    visit = db.query(Visit).filter(Visit.id == visit_id).first()
+
+    if not visit:
+        raise HTTPException(status_code=404, detail="Visit not found")
+
+    valid_statuses = {"active", "cancelled"}
+    if payload.status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(sorted(valid_statuses))}",
+        )
+
+    visit.status = payload.status
+
+    db.commit()
+    db.refresh(visit)
+
+    return visit

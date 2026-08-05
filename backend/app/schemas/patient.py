@@ -147,6 +147,8 @@ class CurrentMedicationBase(BaseModel):
     medicine_name: str
     dose: Optional[str] = None
     frequency: Optional[str] = None
+    start_date: Optional[date] = None
+    duration: Optional[str] = None
 
 class CurrentMedicationCreate(CurrentMedicationBase):
     pass
