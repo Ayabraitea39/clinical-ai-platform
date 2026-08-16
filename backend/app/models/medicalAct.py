@@ -1,12 +1,15 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, Numeric, Text, Enum,Date
-from typing import Optional,TYPE_CHECKING
-import enum,datetime
+from sqlalchemy import String, ForeignKey, Numeric, Text, Enum, Date, Integer
+from typing import Optional, TYPE_CHECKING
+import enum
+import datetime
 
 from .identity import Base
+
 if TYPE_CHECKING:
     from .visit import Visit
     from .identity import Patient, Doctor
+
 
 class ActClassification(str, enum.Enum):
     medicine = "medicine"
@@ -63,6 +66,47 @@ class Order(Base):
 
     visit: Mapped["Visit"] = relationship(back_populates="orders")
     medical_act: Mapped["MedicalAct"] = relationship()
+    result: Mapped[Optional["OrderResult"]] = relationship(
+        back_populates="order",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+
+class OrderResult(Base):
+    __tablename__ = "order_results"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[int] = mapped_column(
+        ForeignKey("orders.id"),
+        nullable=False,
+        unique=True,
+    )
+    result_text: Mapped[str] = mapped_column(Text, nullable=False)
+    result_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+
+    order: Mapped["Order"] = relationship(back_populates="result")
+    attachments: Mapped[list["OrderResultAttachment"]] = relationship(
+        back_populates="result",
+        cascade="all, delete-orphan",
+    )
+
+
+class OrderResultAttachment(Base):
+    __tablename__ = "order_result_attachments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_result_id: Mapped[int] = mapped_column(
+        ForeignKey("order_results.id"),
+        nullable=False,
+    )
+    file_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    content_type: Mapped[Optional[str]] = mapped_column(String(100))
+    file_size: Mapped[Optional[int]] = mapped_column(Integer)
+
+    result: Mapped["OrderResult"] = relationship(back_populates="attachments")
 
 
 class BillingLine(Base):

@@ -22,10 +22,15 @@ import {
   getCurrentMedications,
   addCurrentMedication,
   deleteCurrentMedication,
+  getInsuranceCoverage,
+  addInsuranceCoverage,
+  updateInsuranceCoverage,
+  deleteInsuranceCoverage,
 } from "../api/patients";
 import { getIcd10Codes } from "../api/icd10";
 import "./PatientCardPage.css";
 import VisitModal from "../components/patients/VisitModal";
+import ChatWidget from "../components/chatbot/ChatWidget";
 import { useParams, Link } from "react-router-dom";
 
 function calculateAge(dob) {
@@ -142,9 +147,16 @@ const CATEGORY_META = {
       },
     ],
   },
-  // habits intentionally has no entry in CATEGORY_API below — there's no
-  // get/add/delete in api/patients.js for it yet, so it stays local-state
-  // only until that backend + api wiring exists.
+  insurance_coverage: {
+    label: "Insurance Coverage",
+    sectionTitle: "Insurance Coverage",
+    fields: [
+      { key: "provider", label: "Insurance provider", type: "text", required: true },
+      { key: "policy_number", label: "Policy number", type: "text" },
+    ],
+  },
+  // habits has no entry in CATEGORY_API below — there's no backend for it
+  // yet, so it stays local-state only until that backend + api wiring exists.
   habits: {
     label: "Addiction & Lifestyle Habit",
     sectionTitle: "Lifestyle Habits",
@@ -160,8 +172,10 @@ const CATEGORY_META = {
   },
 };
 
-// Maps each backend-wired category to its get/add/delete functions, so the
-// rest of the component can stay generic instead of a big switch statement.
+// Maps each backend-wired category to its get/add/delete (and, for insurance,
+// update) functions, so the rest of the component can stay generic instead
+// of a big switch statement. Only insurance_coverage has an `update` key,
+// since it's the only category whose backend exposes a PUT endpoint.
 const CATEGORY_API = {
   chronic_diseases: { get: getChronicDiseases, add: addChronicDisease, remove: deleteChronicDisease },
   family_history: { get: getFamilyHistory, add: addFamilyHistory, remove: deleteFamilyHistory },
@@ -169,6 +183,12 @@ const CATEGORY_API = {
   immunizations: { get: getImmunizations, add: addImmunization, remove: deleteImmunization },
   allergies: { get: getAllergies, add: addAllergy, remove: deleteAllergy },
   current_medications: { get: getCurrentMedications, add: addCurrentMedication, remove: deleteCurrentMedication },
+  insurance_coverage: {
+    get: getInsuranceCoverage,
+    add: addInsuranceCoverage,
+    remove: deleteInsuranceCoverage,
+    update: updateInsuranceCoverage,
+  },
 };
 
 // Which tab each category belongs to. chronic_diseases + habits live inside
@@ -182,6 +202,7 @@ const TABS = [
   { key: "family_history", label: "Family History", categoryKey: "family_history" },
   { key: "surgical_history", label: "Surgical History", categoryKey: "surgical_history" },
   { key: "immunizations", label: "Immunizations", categoryKey: "immunizations" },
+  { key: "insurance", label: "Insurance", categoryKey: "insurance_coverage" },
   { key: "attached_files", label: "Attached Files" },
 ];
 
@@ -263,9 +284,16 @@ function Icd10Select({ value, onChange }) {
   );
 }
 
-function AddInfoModal({ categoryKey, onClose, onSave }) {
+// AddInfoModal now doubles as the edit form: when `initialData` is passed
+// (editing an existing entry), the form pre-fills from it and the header
+// switches to "Edit". Saving still goes through whatever `onSave` the
+// caller wired up — add or update — so this component doesn't need to know
+// which one it is.
+function AddInfoModal({ categoryKey, initialData, onClose, onSave }) {
   const meta = CATEGORY_META[categoryKey];
-  const [form, setForm] = useState(emptyFormFor(categoryKey));
+  const [form, setForm] = useState(
+    initialData ? { ...emptyFormFor(categoryKey), ...initialData } : emptyFormFor(categoryKey)
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -292,7 +320,7 @@ function AddInfoModal({ categoryKey, onClose, onSave }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
-        <h3>Add {meta.label}</h3>
+        <h3>{initialData ? "Edit" : "Add"} {meta.label}</h3>
         <form onSubmit={handleSave} className="modal-form">
           {meta.fields.map((f) => (
             <div className="field-row modal-field-row" key={f.key}>
@@ -352,11 +380,12 @@ function AddInfoModal({ categoryKey, onClose, onSave }) {
   );
 }
 
-function CategoryCard({ categoryKey, entries, onAdd, onDelete }) {
+function CategoryCard({ categoryKey, entries, onAdd, onEdit, onDelete }) {
   const meta = CATEGORY_META[categoryKey];
   const titleField = meta.fields.find((f) => f.required);
   const otherFields = meta.fields.filter((f) => f !== titleField);
   const isBackendWired = Boolean(CATEGORY_API[categoryKey]);
+  const canEdit = Boolean(CATEGORY_API[categoryKey]?.update);
 
   function titleValue(entry) {
     if (!titleField) return null;
@@ -396,17 +425,26 @@ function CategoryCard({ categoryKey, entries, onAdd, onDelete }) {
                   </div>
                 );
               })}
-              {isBackendWired && entry.id && (
-                <div style={{ marginTop: 8 }}>
-                  <button
-                    type="button"
-                    className="entry-remove-btn"
-                    onClick={() => onDelete(categoryKey, entry.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
+             {isBackendWired && entry.id && (
+  <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+    {canEdit && (
+      <button
+        type="button"
+        className="entry-edit-btn"
+        onClick={() => onEdit(entry)}
+      >
+        Edit
+      </button>
+    )}
+    <button
+      type="button"
+      className="entry-remove-btn"
+      onClick={() => onDelete(categoryKey, entry.id)}
+    >
+      Remove
+    </button>
+  </div>
+)}
             </div>
           ))}
         </div>
@@ -434,7 +472,7 @@ function AttachedFilesCard({ files, onAdd, onDelete }) {
         <div className="entries-scroll">
           {files.map((f) => (
             <div className="history-entry" key={f.id}>
-              <a
+            <a  
                 href={`http://127.0.0.1:8000${f.file_url}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -538,6 +576,7 @@ function PatientCardPage() {
     immunizations: [],
     allergies: [],
     current_medications: [],
+    insurance_coverage: [],
     habits: [], // still local-only, no backend wired yet
   });
 
@@ -545,7 +584,8 @@ function PatientCardPage() {
   const [showAttachModal, setShowAttachModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [activeCategory, setActiveCategory] = useState(null); // which modal is open
+  const [activeCategory, setActiveCategory] = useState(null); // which "add" modal is open
+  const [editingEntry, setEditingEntry] = useState(null); // { categoryKey, entry } — which "edit" modal is open
   const [showVisitModal, setShowVisitModal] = useState(false);
 
   useEffect(() => {
@@ -555,7 +595,7 @@ function PatientCardPage() {
     });
     getPatientFiles(id).then(setPatientFiles);
 
-    // Fetch all 6 backend-wired categories in parallel, keep habits as-is
+    // Fetch all backend-wired categories in parallel, keep habits as-is
     // (empty, local-only) since there's no backend for it yet.
     const categoryKeys = Object.keys(CATEGORY_API);
     Promise.all(categoryKeys.map((key) => CATEGORY_API[key].get(id))).then(
@@ -595,6 +635,17 @@ function PatientCardPage() {
     setActiveTab(owningTab ? owningTab.key : "overview");
   }
 
+  async function updateEntry(categoryKey, entryId, form) {
+    const api = CATEGORY_API[categoryKey];
+    if (!api?.update) return;
+
+    const updated = await api.update(id, entryId, form);
+    setExtraData((prev) => ({
+      ...prev,
+      [categoryKey]: prev[categoryKey].map((e) => (e.id === entryId ? updated : e)),
+    }));
+  }
+
   async function deleteEntry(categoryKey, entryId) {
     const api = CATEGORY_API[categoryKey];
     if (!api) return;
@@ -622,147 +673,167 @@ function PatientCardPage() {
 
   const age = calculateAge(patient.date_of_birth);
   const activeTabMeta = TABS.find((t) => t.key === activeTab);
+  const patientCode = `P-${String(id).padStart(3, "0")}`;
 
   return (
-    <div className="patient-card-page">
-      <div className="patient-card-header">
-        <div>
-          <h1>{patient.full_name}</h1>
-        </div>
+    <div style={{ display: "flex", gap: "0", alignItems: "flex-start" }}>
+      <div className="patient-card-page" style={{ flex: 1, minWidth: 0, paddingRight: "400px" }}>
+        <div className="patient-card-header">
+          <div>
+            <h1>{patient.full_name}</h1>
+          </div>
 
-        <div className="header-actions">
-          <Link to={`/patients/${id}/file`} className="view-file-btn">
-            View Patient Visits
-          </Link>
-          <button className="new-visit-btn" onClick={() => setShowVisitModal(true)}>
-            + New Visit
-          </button>
-        </div>
-      </div>
-
-      <div className="patient-card-grid">
-        <div className="patient-card-section">
-          <h3>Demographics</h3>
-
-          <div className="field-row">
-            <span className="field-label">Date of Birth</span>
-            <span className="field-value">
-              {patient.date_of_birth} <span className="age-suffix">({age}y)</span>
-            </span>
-          </div>
-          <div className="field-row">
-            <span className="field-label">Gender</span>
-            <span className="field-value" style={{ textTransform: "capitalize" }}>
-              {patient.gender}
-            </span>
-          </div>
-          <div className="field-row">
-            <span className="field-label">Blood Type</span>
-            <span className="field-value blood-type">{patient.blood_type}</span>
-          </div>
-          <div className="field-row">
-            <span className="field-label">Nationality</span>
-            <span className="field-value">{patient.nationality}</span>
-          </div>
-          <div className="field-row">
-            <span className="field-label">Social Status</span>
-            <span className="field-value" style={{ textTransform: "capitalize" }}>
-              {patient.social_status}
-            </span>
-          </div>
-        </div>
-
-        <div className="patient-card-section">
-          <h3>Contact</h3>
-
-          <div className="field-row">
-            <span className="field-label">Phone</span>
-            <span className="field-value">{patient.phone}</span>
-          </div>
-          <div className="field-row">
-            <span className="field-label">Email</span>
-            <span className="field-value">{patient.email}</span>
-          </div>
-          <div className="field-row">
-            <span className="field-label">Address</span>
-            <span className="field-value">{patient.address}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="tabs">
-        {TABS.map((tab) => {
-          const count = tab.key === "attached_files"
-            ? patientFiles.length
-            : tab.categoryKey ? extraData[tab.categoryKey].length : null;
-          return (
-            <button
-              key={tab.key}
-              className={`tab ${activeTab === tab.key ? "active" : ""}`}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-              {count !== null && count > 0 ? ` (${count})` : ""}
+          <div className="header-actions">
+            <Link to={`/patients/${id}/file`} className="view-file-btn">
+              View Patient Visits
+            </Link>
+            <button className="new-visit-btn" onClick={() => setShowVisitModal(true)}>
+              + New Visit
             </button>
-          );
-        })}
+          </div>
+        </div>
+
+        <div className="patient-card-grid">
+          <div className="patient-card-section">
+            <h3>Demographics</h3>
+
+            <div className="field-row">
+              <span className="field-label">Date of Birth</span>
+              <span className="field-value">
+                {patient.date_of_birth} <span className="age-suffix">({age}y)</span>
+              </span>
+            </div>
+            <div className="field-row">
+              <span className="field-label">Gender</span>
+              <span className="field-value" style={{ textTransform: "capitalize" }}>
+                {patient.gender}
+              </span>
+            </div>
+            <div className="field-row">
+              <span className="field-label">Blood Type</span>
+              <span className="field-value blood-type">{patient.blood_type}</span>
+            </div>
+            <div className="field-row">
+              <span className="field-label">Nationality</span>
+              <span className="field-value">{patient.nationality}</span>
+            </div>
+            <div className="field-row">
+              <span className="field-label">Social Status</span>
+              <span className="field-value" style={{ textTransform: "capitalize" }}>
+                {patient.social_status}
+              </span>
+            </div>
+          </div>
+
+          <div className="patient-card-section">
+            <h3>Contact</h3>
+
+            <div className="field-row">
+              <span className="field-label">Phone</span>
+              <span className="field-value">{patient.phone}</span>
+            </div>
+            <div className="field-row">
+              <span className="field-label">Email</span>
+              <span className="field-value">{patient.email}</span>
+            </div>
+            <div className="field-row">
+              <span className="field-label">Address</span>
+              <span className="field-value">{patient.address}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="tabs">
+          {TABS.map((tab) => {
+            const count = tab.key === "attached_files"
+              ? patientFiles.length
+              : tab.categoryKey ? extraData[tab.categoryKey].length : null;
+            return (
+              <button
+                key={tab.key}
+                className={`tab ${activeTab === tab.key ? "active" : ""}`}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.label}
+                {count !== null && count > 0 ? ` (${count})` : ""}
+              </button>
+            );
+          })}
+        </div>
+
+        {activeTab === "overview" ? (
+          <div className="patient-card-grid">
+            <CategoryCard
+              categoryKey="chronic_diseases"
+              entries={extraData.chronic_diseases}
+              onAdd={() => setActiveCategory("chronic_diseases")}
+              onEdit={(entry) => setEditingEntry({ categoryKey: "chronic_diseases", entry })}
+              onDelete={deleteEntry}
+            />
+            <CategoryCard
+              categoryKey="habits"
+              entries={extraData.habits}
+              onAdd={() => setActiveCategory("habits")}
+              onEdit={(entry) => setEditingEntry({ categoryKey: "habits", entry })}
+              onDelete={deleteEntry}
+            />
+          </div>
+        ) : activeTab === "attached_files" ? (
+          <div className="patient-card-grid single-col">
+            <AttachedFilesCard
+              files={patientFiles}
+              onAdd={() => setShowAttachModal(true)}
+              onDelete={handleDeleteFile}
+            />
+          </div>
+        ) : (
+          <div className="patient-card-grid single-col">
+            <CategoryCard
+              categoryKey={activeTabMeta.categoryKey}
+              entries={extraData[activeTabMeta.categoryKey]}
+              onAdd={() => setActiveCategory(activeTabMeta.categoryKey)}
+              onEdit={(entry) => setEditingEntry({ categoryKey: activeTabMeta.categoryKey, entry })}
+              onDelete={deleteEntry}
+            />
+          </div>
+        )}
+
+        {(activeCategory || editingEntry) && (
+          <AddInfoModal
+            categoryKey={editingEntry ? editingEntry.categoryKey : activeCategory}
+            initialData={editingEntry ? editingEntry.entry : null}
+            onClose={() => {
+              setActiveCategory(null);
+              setEditingEntry(null);
+            }}
+            onSave={
+              editingEntry
+                ? (categoryKey, form) => updateEntry(categoryKey, editingEntry.entry.id, form)
+                : saveEntry
+            }
+          />
+        )}
+
+        {showAttachModal && (
+          <AttachFileModal
+            onClose={() => setShowAttachModal(false)}
+            onSave={handleUploadFile}
+          />
+        )}
+
+        {showVisitModal && (
+          <VisitModal
+            patientId={id}
+            onClose={() => setShowVisitModal(false)}
+          />
+        )}
       </div>
 
-      {activeTab === "overview" ? (
-        <div className="patient-card-grid">
-          <CategoryCard
-            categoryKey="chronic_diseases"
-            entries={extraData.chronic_diseases}
-            onAdd={() => setActiveCategory("chronic_diseases")}
-            onDelete={deleteEntry}
-          />
-          <CategoryCard
-            categoryKey="habits"
-            entries={extraData.habits}
-            onAdd={() => setActiveCategory("habits")}
-            onDelete={deleteEntry}
-          />
-        </div>
-      ) : activeTab === "attached_files" ? (
-        <div className="patient-card-grid single-col">
-          <AttachedFilesCard
-            files={patientFiles}
-            onAdd={() => setShowAttachModal(true)}
-            onDelete={handleDeleteFile}
-          />
-        </div>
-      ) : (
-        <div className="patient-card-grid single-col">
-          <CategoryCard
-            categoryKey={activeTabMeta.categoryKey}
-            entries={extraData[activeTabMeta.categoryKey]}
-            onAdd={() => setActiveCategory(activeTabMeta.categoryKey)}
-            onDelete={deleteEntry}
-          />
-        </div>
-      )}
-
-      {activeCategory && (
-        <AddInfoModal
-          categoryKey={activeCategory}
-          onClose={() => setActiveCategory(null)}
-          onSave={saveEntry}
-        />
-      )}
-
-      {showAttachModal && (
-        <AttachFileModal
-          onClose={() => setShowAttachModal(false)}
-          onSave={handleUploadFile}
-        />
-      )}
-
-      {showVisitModal && (
-        <VisitModal
-          patientId={id}
-          onClose={() => setShowVisitModal(false)}
-        />
-      )}
+      <ChatWidget
+        patientId={id}
+        patientName={patient.full_name}
+        patientCode={patientCode}
+      />
     </div>
   );
 }

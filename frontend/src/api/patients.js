@@ -124,3 +124,22 @@ export async function deleteCurrentMedication(patientId, entryId) {
   const res = await axiosClient.delete(`/patients/${patientId}/current-medications/${entryId}`);
   return res.data;
 }
+
+
+
+export async function getInsuranceCoverage(patientId) {
+  const res = await axiosClient.get(`/patients/${patientId}/insurance-coverage/`);
+  return res.data;
+}
+export async function addInsuranceCoverage(patientId, payload) {
+  const res = await axiosClient.post(`/patients/${patientId}/insurance-coverage/`, payload);
+  return res.data;
+}
+export async function updateInsuranceCoverage(patientId, entryId, payload) {
+  const res = await axiosClient.put(`/patients/${patientId}/insurance-coverage/${entryId}`, payload);
+  return res.data;
+}
+export async function deleteInsuranceCoverage(patientId, entryId) {
+  const res = await axiosClient.delete(`/patients/${patientId}/insurance-coverage/${entryId}`);
+  return res.data;
+}

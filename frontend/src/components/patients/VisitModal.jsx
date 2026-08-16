@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDoctors } from "../../api/doctors";
 import { createVisit, submitVisitSigns, getSignCategories } from "../../api/visit";
@@ -14,6 +14,7 @@ function VisitModal({ patientId, onClose }) {
   const [visitType, setVisitType] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const submittingRef = useRef(false); // synchronous guard, unlike state
 
   const [commonCategories, setCommonCategories] = useState([]);
   const [signValues, setSignValues] = useState({});
@@ -21,7 +22,6 @@ function VisitModal({ patientId, onClose }) {
   useEffect(() => {
     getDoctors().then(setDoctors);
     getSignCategories().then((cats) => {
-      // Staff only fill common signs (doctor_id === null); filter each category's list
       const filtered = cats
         .map((c) => ({ ...c, signs: c.signs.filter((s) => s.doctor_id === null) }))
         .filter((c) => c.signs.length > 0);
@@ -35,8 +35,17 @@ function VisitModal({ patientId, onClose }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    // Synchronous guard: blocks a second call immediately, even if it fires
+    // before React re-renders the button as disabled (state updates are
+    // async/batched, so `disabled={submitting}` alone isn't fast enough to
+    // stop a rapid double-click or double Enter-press).
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+
     if (!doctorId || !visitDate || !visitType) {
       setError("Please fill in all fields.");
+      submittingRef.current = false;
       return;
     }
     setSubmitting(true);
@@ -63,6 +72,7 @@ function VisitModal({ patientId, onClose }) {
       navigate(`/visits/${visit.id}/fill`);
     } catch (err) {
       setError(err?.response?.data?.detail || "Could not create visit.");
+      submittingRef.current = false;
     } finally {
       setSubmitting(false);
     }

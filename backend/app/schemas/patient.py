@@ -159,3 +159,17 @@ class CurrentMedicationOut(CurrentMedicationBase):
 
     class Config:
         from_attributes = True
+
+class InsuranceCoverageBase(BaseModel):
+    provider: Optional[str] = None
+    policy_number: Optional[str] = None
+
+class InsuranceCoverageCreate(InsuranceCoverageBase):
+    pass
+
+class InsuranceCoverageOut(InsuranceCoverageBase):
+    id: int
+    patient_id: int
+
+    class Config:
+        from_attributes = True

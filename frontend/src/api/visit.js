@@ -25,11 +25,6 @@ export async function createSignCategory(name) {
   return res.data;
 }
 
-export async function createSignDefinition(payload) {
-  const res = await axiosClient.post("/visits/sign-definitions/", payload);
-  return res.data;
-}
-
 export async function getSignForm(visitId) {
   const res = await axiosClient.get(`/visits/${visitId}/sign-form`);
   return res.data;
@@ -52,5 +47,12 @@ export async function updateConclusion(visitId, conclusion) {
 
 export async function updateVisitStatus(visitId, status) {
   const res = await axiosClient.put(`/visits/${visitId}/status`, { status });
+  return res.data;
+}
+
+// Add this export to your existing src/api/visit.js file.
+
+export async function createSignDefinition(sign) {
+  const res = await axiosClient.post("/visits/sign-definitions/", sign);
   return res.data;
 }

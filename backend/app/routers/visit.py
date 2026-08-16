@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -24,6 +24,8 @@ from ..schemas.visit import (
     SignDefinitionCreate,
     SignDefinitionOut,
 )
+from ..models import Doctor, SignCategory, SignDefinition
+from ..schemas.visit import SignDefinitionCreate, SignDefinitionOut
 
 router = APIRouter(prefix="/visits", tags=["visits"])
 
@@ -173,6 +175,19 @@ def submit_visit_signs(
     payload: VisitSignsCreate,
     db: Session = Depends(get_db),
 ):
+    # Replace-on-save: remove any existing rows for the sign_definition_ids
+    # being submitted before re-inserting. Without this, reopening the Fill
+    # page and clicking Finish again (even with no changes) re-inserts every
+    # sign on top of what's already saved, causing duplicate rows to pile up
+    # every time a visit is edited/re-saved.
+    incoming_definition_ids = [sign.sign_definition_id for sign in payload.signs]
+
+    if incoming_definition_ids:
+        db.query(VisitSign).filter(
+            VisitSign.visit_id == visit_id,
+            VisitSign.sign_definition_id.in_(incoming_definition_ids),
+        ).delete(synchronize_session=False)
+
     for sign in payload.signs:
         db.add(
             VisitSign(
@@ -230,3 +245,34 @@ def update_visit_status(
     db.refresh(visit)
 
     return visit
+
+@router.post(
+    "/sign-definitions/",
+    response_model=SignDefinitionOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_sign_definition(
+    payload: SignDefinitionCreate,
+    db: Session = Depends(get_db),
+):
+    category = db.get(SignCategory, payload.category_id)
+    if not category:
+        raise HTTPException(status_code=404, detail="Sign category not found")
+
+    if payload.doctor_id is not None:
+        doctor = db.get(Doctor, payload.doctor_id)
+        if not doctor:
+            raise HTTPException(status_code=404, detail="Doctor not found")
+
+    sign = SignDefinition(
+        category_id=payload.category_id,
+        doctor_id=payload.doctor_id,
+        name=payload.name,
+        data_type=payload.data_type,
+    )
+
+    db.add(sign)
+    db.commit()
+    db.refresh(sign)
+
+    return sign

@@ -11,4 +11,14 @@ from .patient import (
 )
 from .reference import Icd10Code
 from .visit import Visit, SignCategory, SignDataType, SignDefinition, VisitSign
-from .medicalAct import MedicalAct, ActClassification, MedicalActPrice, Prescription, Order, BillingLine
+from .medicalAct import (
+    ActClassification,
+    MedicalAct,
+    MedicalActPrice,
+    Prescription,
+    Order,
+    OrderResult,
+    OrderResultAttachment,
+    BillingLine,
+    InsuranceCoverage,
+)

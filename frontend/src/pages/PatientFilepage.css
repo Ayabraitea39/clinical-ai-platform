@@ -228,6 +228,87 @@
   font-style: italic;
 }
 
+/* =====================================================================
+   MEDICAL ACTS  (Prescriptions / Lab Tests / Imaging / Other — visually
+   distinct pills from vitals/signs, color-coded per act type)
+   ===================================================================== */
+
+.visit-timeline-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.visit-timeline-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 12px;
+}
+
+.visit-timeline-act-kind {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: #b45309;
+}
+
+.visit-timeline-act-name {
+  font-weight: 700;
+  color: #78350f;
+}
+
+.visit-timeline-act-medicine {
+  border-color: #99f6e4;
+  background: #f0fdfa;
+}
+.visit-timeline-act-medicine .visit-timeline-act-kind {
+  color: #0f766e;
+}
+.visit-timeline-act-medicine .visit-timeline-act-name {
+  color: #134e4a;
+}
+
+.visit-timeline-act-test {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+.visit-timeline-act-test .visit-timeline-act-kind {
+  color: #0369a1;
+}
+.visit-timeline-act-test .visit-timeline-act-name {
+  color: #0c4a6e;
+}
+
+.visit-timeline-act-imaging {
+  border-color: #e9d5ff;
+  background: #faf5ff;
+}
+.visit-timeline-act-imaging .visit-timeline-act-kind {
+  color: #7e22ce;
+}
+.visit-timeline-act-imaging .visit-timeline-act-name {
+  color: #581c87;
+}
+
+.visit-timeline-act-other {
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+.visit-timeline-act-other .visit-timeline-act-kind {
+  color: #be123c;
+}
+.visit-timeline-act-other .visit-timeline-act-name {
+  color: #881337;
+}
+
 .visit-timeline-conclusion {
   margin: 0;
   color: #475569;

@@ -601,3 +601,83 @@
   color: #94a3b8;
   cursor: not-allowed;
 }
+
+.medical-act-section {
+  --section-accent: #2563eb;
+}
+
+.medical-act-section h3 {
+  color: var(--section-title-color);
+}
+
+/* Medicine - Teal */
+.medical-act-section-medicine {
+  --section-accent: #14b8a6;
+  --section-title-color: #0f766e;
+}
+
+/* Test - Sky Blue */
+.medical-act-section-test {
+  --section-accent: #38bdf8;
+  --section-title-color: #0369a1;
+}
+
+/* Imaging - Violet */
+.medical-act-section-imaging {
+  --section-accent: #a855f7;
+  --section-title-color: #7e22ce;
+}
+
+/* Other - Coral */
+.medical-act-section-other {
+  --section-accent: #fb7185;
+  --section-title-color: #be123c;
+}
+.medical-act-section .empty-hint {
+  padding: 16px;
+  margin: 0;
+  background: #f8fafc;
+}
+
+/* =====================================================================
+   9. ORDER ACTION ROW  (Remove button + Upload Result / Result, side by side)
+   ===================================================================== */
+
+.order-action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: flex-start;
+}
+
+.order-action-row .btn-secondary {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.order-action-row .entry-remove-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.order-action-row .entry-remove-btn:hover {
+  background: #fee2e2;
+  text-decoration: none;
+}
+
+.order-action-row .field-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}

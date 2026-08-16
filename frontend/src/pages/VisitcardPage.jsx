@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getVisit, getSignForm, getVisitSigns } from "../api/visit";
+import { getVisitOrders, getVisitPrescriptions } from "../api/MedicalActs";
 import "./VisitCardPage.css";
 
 function formatValue(sign, rawValue) {
@@ -33,6 +34,8 @@ function VisitCardPage() {
   const [categories, setCategories] = useState([]);
   const [signValues, setSignValues] = useState({});
   const [attachedFiles, setAttachedFiles] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,10 +44,14 @@ function VisitCardPage() {
         getVisit(id),
         getSignForm(id),
         getVisitSigns(id),
+        getVisitOrders(id),
+        getVisitPrescriptions(id),
       ]);
       const visitData = results[0];
       const formData = results[1];
       const existingSigns = results[2];
+      const savedOrders = results[3];
+      const savedPrescriptions = results[4];
 
       setVisit(visitData);
       setCategories(formData);
@@ -54,6 +61,21 @@ function VisitCardPage() {
         valuesMap[s.sign_definition_id] = s.value;
       });
       setSignValues(valuesMap);
+
+      setOrders(
+        savedOrders.map((order) => ({
+          ...order,
+          medical_act_name: order.medical_act.name,
+          classification: order.medical_act.classification,
+        }))
+      );
+
+      setPrescriptions(
+        savedPrescriptions.map((prescription) => ({
+          ...prescription,
+          medicine_name: prescription.medical_act.name,
+        }))
+      );
 
       try {
         const stored = localStorage.getItem("visit_" + id + "_files");
@@ -85,6 +107,58 @@ function VisitCardPage() {
     .filter(function (cat) {
       return cat.signs.length > 0;
     });
+
+  const testOrders = orders.filter((order) => order.classification === "test");
+  const imagingOrders = orders.filter((order) => order.classification === "imaging");
+  const otherOrders = orders.filter((order) => order.classification === "other");
+
+  function renderOrderResult(order) {
+    if (!order.result) return null;
+    const attachment = order.result.attachments && order.result.attachments[0];
+    return (
+      <div className="field-row">
+        <span className="field-label">Result</span>
+        <span className="field-value">
+          {attachment ? (
+            <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
+              {attachment.file_name}
+            </a>
+          ) : (
+            "Uploaded"
+          )}
+        </span>
+      </div>
+    );
+  }
+
+  function renderOrderSection(title, sectionClass, sectionOrders) {
+    if (sectionOrders.length === 0) return null;
+    return (
+      <div className={`patient-card-section medical-act-section ${sectionClass}`}>
+        <h3>{title}</h3>
+        <div className="entries-scroll">
+          {sectionOrders.map((order) => (
+            <div className="history-entry" key={order.id}>
+              <div className="field-value-lg">{order.medical_act_name}</div>
+              {order.reason && (
+                <div className="field-row">
+                  <span className="field-label">Reason</span>
+                  <span className="field-value">{order.reason}</span>
+                </div>
+              )}
+              {order.notes && (
+                <div className="field-row">
+                  <span className="field-label">Notes</span>
+                  <span className="field-value">{order.notes}</span>
+                </div>
+              )}
+              {renderOrderResult(order)}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="visit-card-page">
@@ -125,6 +199,54 @@ function VisitCardPage() {
           })}
         </div>
       )}
+
+      {prescriptions.length > 0 && (
+        <div className="patient-card-section medical-act-section medical-act-section-medicine">
+          <h3>Prescriptions</h3>
+          <div className="entries-scroll">
+            {prescriptions.map((prescription) => (
+              <div className="history-entry" key={prescription.id}>
+                <div className="field-label">Medicine</div>
+                <div className="field-value-lg">{prescription.medicine_name}</div>
+                {prescription.dose && (
+                  <div className="field-row">
+                    <span className="field-label">Dose</span>
+                    <span className="field-value">{prescription.dose}</span>
+                  </div>
+                )}
+                {prescription.frequency && (
+                  <div className="field-row">
+                    <span className="field-label">Frequency</span>
+                    <span className="field-value">{prescription.frequency}</span>
+                  </div>
+                )}
+                {prescription.route && (
+                  <div className="field-row">
+                    <span className="field-label">Route</span>
+                    <span className="field-value">{prescription.route}</span>
+                  </div>
+                )}
+                {prescription.start_date && (
+                  <div className="field-row">
+                    <span className="field-label">Start Date</span>
+                    <span className="field-value">{prescription.start_date}</span>
+                  </div>
+                )}
+                {prescription.duration && (
+                  <div className="field-row">
+                    <span className="field-label">Duration</span>
+                    <span className="field-value">{prescription.duration}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {renderOrderSection("Laboratory Tests", "medical-act-section-test", testOrders)}
+      {renderOrderSection("Imaging", "medical-act-section-imaging", imagingOrders)}
+      {renderOrderSection("Other Medical Acts", "medical-act-section-other", otherOrders)}
 
       {attachedFiles.length > 0 && (
         <div className="patient-card-section">

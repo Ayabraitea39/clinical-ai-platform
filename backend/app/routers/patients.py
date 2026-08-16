@@ -22,6 +22,8 @@ from app.schemas.patient import (
     AllergyOut,
     CurrentMedicationCreate,
     CurrentMedicationOut,
+    InsuranceCoverageCreate,
+    InsuranceCoverageOut,
 )
 from app.crud import patient as patient_crud
 from .get_current_user import get_current_user
@@ -225,6 +227,38 @@ def remove_current_medication(
     current_user=Depends(get_current_user),
 ):
     deleted = patient_crud.delete_current_medication(db, entry_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return {"ok": True}
+
+
+@router.get("/{patient_id}/insurance-coverage/", response_model=list[InsuranceCoverageOut])
+def list_insurance_coverage(patient_id: int, db: Session = Depends(get_db)):
+    return patient_crud.get_insurance_coverage(db, patient_id)
+
+@router.post("/{patient_id}/insurance-coverage/", response_model=InsuranceCoverageOut, status_code=201)
+def add_insurance_coverage(
+    patient_id: int, payload: InsuranceCoverageCreate, db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    return patient_crud.create_insurance_coverage(db, patient_id, payload)
+
+@router.put("/{patient_id}/insurance-coverage/{entry_id}", response_model=InsuranceCoverageOut)
+def edit_insurance_coverage(
+    patient_id: int, entry_id: int, payload: InsuranceCoverageCreate, db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    updated = patient_crud.update_insurance_coverage(db, entry_id, payload)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return updated
+
+@router.delete("/{patient_id}/insurance-coverage/{entry_id}")
+def remove_insurance_coverage(
+    patient_id: int, entry_id: int, db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    deleted = patient_crud.delete_insurance_coverage(db, entry_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Entry not found")
     return {"ok": True}
