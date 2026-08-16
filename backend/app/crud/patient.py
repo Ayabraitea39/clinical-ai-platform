@@ -18,7 +18,9 @@ from app.schemas.patient import (
     ImmunizationCreate,
     AllergyCreate,
     CurrentMedicationCreate,
+    InsuranceCoverageCreate,
 )
+from app.models.medicalAct import InsuranceCoverage
 
 def get_patients(db: Session):
     return db.query(Patient).all()
@@ -190,4 +192,32 @@ def delete_current_medication(db: Session, entry_id: int):
         return None
     db.delete(record)
     db.commit()
+    return record
+
+def get_insurance_coverage(db: Session, patient_id: int):
+    return db.query(InsuranceCoverage).filter(InsuranceCoverage.patient_id == patient_id).all()
+
+def create_insurance_coverage(db: Session, patient_id: int, payload: InsuranceCoverageCreate):
+    record = InsuranceCoverage(**payload.model_dump(), patient_id=patient_id)
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
+
+def delete_insurance_coverage(db: Session, entry_id: int):
+    record = db.query(InsuranceCoverage).filter(InsuranceCoverage.id == entry_id).first()
+    if not record:
+        return None
+    db.delete(record)
+    db.commit()
+    return record
+
+def update_insurance_coverage(db: Session, entry_id: int, payload: InsuranceCoverageCreate):
+    record = db.query(InsuranceCoverage).filter(InsuranceCoverage.id == entry_id).first()
+    if not record:
+        return None
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(record, key, value)
+    db.commit()
+    db.refresh(record)
     return record

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getPatientById } from "../api/patients";
 import { getPatientVisits, getSignForm, getVisitSigns, updateVisitStatus } from "../api/visit";
+import { getVisitOrders, getVisitPrescriptions } from "../api/MedicalActs";
 import VisitModal from "../components/patients/VisitModal";
 import "./PatientFilePage.css";
 
@@ -45,6 +46,34 @@ async function loadVisitSigns(visitId) {
   return signs;
 }
 
+async function loadVisitMedicalActs(visitId) {
+  const [orders, prescriptions] = await Promise.all([
+    getVisitOrders(visitId),
+    getVisitPrescriptions(visitId),
+  ]);
+
+  const acts = [];
+
+  prescriptions.forEach((p) => {
+    acts.push({
+      label: p.medical_act.name,
+      kindLabel: "Medicine",
+      kind: "medicine",
+    });
+  });
+
+  orders.forEach((o) => {
+    const kindLabels = { test: "Lab Test", imaging: "Imaging", other: "Other" };
+    acts.push({
+      label: o.medical_act.name,
+      kindLabel: kindLabels[o.medical_act.classification] || "Ordered",
+      kind: o.medical_act.classification,
+    });
+  });
+
+  return acts;
+}
+
 function VisitStatusSelect({ visitId, status, onChanged }) {
   const [saving, setSaving] = useState(false);
 
@@ -80,6 +109,7 @@ function PatientFilePage() {
   const [patient, setPatient] = useState(null);
   const [visits, setVisits] = useState([]);
   const [visitSignsById, setVisitSignsById] = useState({});
+  const [visitActsById, setVisitActsById] = useState({});
   const [loading, setLoading] = useState(true);
   const [showVisitModal, setShowVisitModal] = useState(false);
 
@@ -100,6 +130,18 @@ function PatientFilePage() {
             map[visitId] = signs;
           });
           setVisitSignsById(map);
+        });
+
+        Promise.all(
+          visitsData.map((v) =>
+            loadVisitMedicalActs(v.id).then((acts) => [v.id, acts])
+          )
+        ).then((pairs) => {
+          const map = {};
+          pairs.forEach(([visitId, acts]) => {
+            map[visitId] = acts;
+          });
+          setVisitActsById(map);
         });
       }
     );
@@ -145,6 +187,7 @@ function PatientFilePage() {
           <div className="visit-timeline">
             {visits.map((v) => {
               const signs = visitSignsById[v.id];
+              const acts = visitActsById[v.id];
               const status = v.status || "active";
 
               return (
@@ -191,6 +234,22 @@ function PatientFilePage() {
                           <span className="visit-timeline-sign" key={idx}>
                             <span className="visit-timeline-sign-name">{s.name}</span>
                             <span className="visit-timeline-sign-value">{s.value}</span>
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {acts === undefined ? (
+                      <p className="visit-timeline-signs-loading">Loading medical acts...</p>
+                    ) : acts.length > 0 ? (
+                      <div className="visit-timeline-acts">
+                        {acts.map((a, idx) => (
+                          <span
+                            className={`visit-timeline-act visit-timeline-act-${a.kind}`}
+                            key={idx}
+                          >
+                            <span className="visit-timeline-act-kind">{a.kindLabel}</span>
+                            <span className="visit-timeline-act-name">{a.label}</span>
                           </span>
                         ))}
                       </div>

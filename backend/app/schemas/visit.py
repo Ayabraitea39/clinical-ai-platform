@@ -2,6 +2,7 @@ from typing import Optional
 import datetime
 from pydantic import BaseModel
 
+from ..models.visit import SignDataType
 
 class VisitCreate(BaseModel):
     patient_id: int
@@ -81,3 +82,25 @@ class SignDefinitionOut(BaseModel):
 
     class Config:
         from_attributes = True
+class SignDefinitionCreate(BaseModel):
+    category_id: int
+    doctor_id: Optional[int] = None
+    name: str
+    data_type: SignDataType
+    score_weight: Optional[int] = None
+    description: Optional[str] = None
+    predefined_values: Optional[str] = None
+
+
+class SignDefinitionOut(BaseModel):
+    id: int
+    category_id: int
+    doctor_id: Optional[int] = None
+    name: str
+    data_type: SignDataType
+    score_weight: Optional[int] = None
+    description: Optional[str] = None
+    predefined_values: Optional[str] = None
+
+    class Config:
+        from_attributes = True        

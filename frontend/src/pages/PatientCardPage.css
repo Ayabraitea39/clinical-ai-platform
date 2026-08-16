@@ -77,11 +77,15 @@
 /* Tabs, sitting below the Demographics/Contact cards */
 .tabs {
   display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
   gap: 4px;
   border-bottom: 1px solid #e2e8f0;
   margin-top: 20px;
   margin-bottom: 20px;
-  flex-wrap: wrap;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab {
@@ -93,15 +97,18 @@
   color: #64748b;
   cursor: pointer;
   border-bottom: 2px solid transparent;
+  flex: 0 0 auto;     /* prevents shrinking or wrapping */
 }
 
-.tab:hover {
-  color: #0f172a;
+.tabs::-webkit-scrollbar {
+  height: 4px;
 }
-
-.tab.active {
-  color: #16213e;
-  border-bottom-color: #2563eb;
+.tabs::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.tabs::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Content grid */
@@ -422,4 +429,33 @@
   padding: 12px 14px;
   font-size: 14px;
   color: #94a3b8;
+}
+.entry-remove-btn {
+  background: #fef2f2;
+  color: #dc2626;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.entry-remove-btn:hover {
+  background: #fee2e2;
+}
+
+.entry-edit-btn {
+  background: #16213e;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.entry-edit-btn:hover {
+  background: #1e2a4a;
 }
