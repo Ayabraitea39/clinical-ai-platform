@@ -201,8 +201,7 @@ function ChatWidget({ patientId, patientName, patientCode }) {
 
         {historyLoaded && messages.length === 0 && (
           <div className="chat-bubble chat-bubble-assistant">
-            Hello. I'm scoped to {patientName}'s record. Ask me about allergies,
-            current medications, last visit, diagnoses, or a patient summary.
+            Hello. I'm scoped to {patientName}'s record.
             <div className="chat-time">{formatTime(new Date())}</div>
           </div>
         )}
