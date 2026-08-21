@@ -23,7 +23,7 @@ function VisitModal({ patientId, onClose }) {
     getDoctors().then(setDoctors);
     getSignCategories().then((cats) => {
       const filtered = cats
-        .map((c) => ({ ...c, signs: c.signs.filter((s) => s.doctor_id === null) }))
+       .map((c) => ({ ...c, signs: (c.signs ?? []).filter((s) => s.doctor_id === null) }))
         .filter((c) => c.signs.length > 0);
       setCommonCategories(filtered);
     });

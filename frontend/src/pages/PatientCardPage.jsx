@@ -26,6 +26,9 @@ import {
   addInsuranceCoverage,
   updateInsuranceCoverage,
   deleteInsuranceCoverage,
+  getHabits,
+  addHabit,
+  deleteHabit,
 } from "../api/patients";
 import { getIcd10Codes } from "../api/icd10";
 import "./PatientCardPage.css";
@@ -42,6 +45,29 @@ function calculateAge(dob) {
     age--;
   }
   return age;
+}
+
+// FastAPI validation errors come back as `detail: [{ type, loc, msg, input,
+// ctx }, ...]` (or occasionally a plain string for non-validation errors).
+// React can't render that array/object directly, so every catch block that
+// wants to show `err` to the user must go through this first.
+function extractErrorMessage(err, fallback) {
+  const detail = err?.response?.data?.detail;
+  if (!detail) return fallback;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return (
+      detail
+        .map((e) => {
+          if (typeof e === "string") return e;
+          const field = Array.isArray(e?.loc) ? e.loc[e.loc.length - 1] : null;
+          return field ? `${field}: ${e.msg}` : e?.msg;
+        })
+        .filter(Boolean)
+        .join(", ") || fallback
+    );
+  }
+  return fallback;
 }
 
 const CATEGORY_META = {
@@ -155,8 +181,6 @@ const CATEGORY_META = {
       { key: "policy_number", label: "Policy number", type: "text" },
     ],
   },
-  // habits has no entry in CATEGORY_API below — there's no backend for it
-  // yet, so it stays local-state only until that backend + api wiring exists.
   habits: {
     label: "Addiction & Lifestyle Habit",
     sectionTitle: "Lifestyle Habits",
@@ -175,9 +199,12 @@ const CATEGORY_META = {
 // Maps each backend-wired category to its get/add/delete (and, for insurance,
 // update) functions, so the rest of the component can stay generic instead
 // of a big switch statement. Only insurance_coverage has an `update` key,
-// since it's the only category whose backend exposes a PUT endpoint.
+// since it's the only category whose backend exposes a PUT endpoint — habits
+// is backend-wired now too (get/add/remove) but intentionally has no edit
+// flow, same as chronic_diseases.
 const CATEGORY_API = {
   chronic_diseases: { get: getChronicDiseases, add: addChronicDisease, remove: deleteChronicDisease },
+  habits: { get: getHabits, add: addHabit, remove: deleteHabit },
   family_history: { get: getFamilyHistory, add: addFamilyHistory, remove: deleteFamilyHistory },
   surgical_history: { get: getSurgicalHistory, add: addSurgicalHistory, remove: deleteSurgicalHistory },
   immunizations: { get: getImmunizations, add: addImmunization, remove: deleteImmunization },
@@ -192,7 +219,8 @@ const CATEGORY_API = {
 };
 
 // Which tab each category belongs to. chronic_diseases + habits live inside
-// the Overview tab as two side-by-side cards; everything else gets its own tab.
+// the Overview tab as two side-by-side cards (habits is backend-wired but
+// still doesn't get its own tab); everything else gets its own tab.
 // "attached_files" is intentionally NOT in CATEGORY_META anymore — it's real
 // backend data now, handled separately from the generic category pattern.
 const TABS = [
@@ -205,6 +233,25 @@ const TABS = [
   { key: "insurance", label: "Insurance", categoryKey: "insurance_coverage" },
   { key: "attached_files", label: "Attached Files" },
 ];
+
+// Pydantic's Optional[date] / Optional[int] fields accept a real value or
+// null — but NOT an empty string. Our forms default every text-like field
+// to "" (see emptyFormFor), so an untouched date/number field sends ""
+// straight into the request body and the backend 422s on it. This walks
+// the form right before submit and swaps "" -> null for any field whose
+// type isn't plain text/textarea/select/checkbox, so blank fields survive
+// validation as "not provided" instead of "invalid date".
+function sanitizeFormForSubmit(categoryKey, form) {
+  const meta = CATEGORY_META[categoryKey];
+  const cleaned = { ...form };
+  meta.fields.forEach((f) => {
+    const value = cleaned[f.key];
+    if (value === "" && (f.type === "date" || f.type === "number")) {
+      cleaned[f.key] = null;
+    }
+  });
+  return cleaned;
+}
 
 function emptyFormFor(categoryKey) {
   const meta = CATEGORY_META[categoryKey];
@@ -309,10 +356,10 @@ function AddInfoModal({ categoryKey, initialData, onClose, onSave }) {
     setSaving(true);
     setError("");
     try {
-      await onSave(categoryKey, form);
+      await onSave(categoryKey, sanitizeFormForSubmit(categoryKey, form));
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.detail || "Could not save entry.");
+      setError(extractErrorMessage(err, "Could not save entry."));
       setSaving(false);
     }
   }
@@ -523,7 +570,7 @@ function AttachFileModal({ onClose, onSave }) {
       await onSave(file, description);
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.detail || "Upload failed.");
+      setError(extractErrorMessage(err, "Upload failed."));
       setSaving(false);
     }
   }
@@ -577,7 +624,7 @@ function PatientCardPage() {
     allergies: [],
     current_medications: [],
     insurance_coverage: [],
-    habits: [], // still local-only, no backend wired yet
+    habits: [],
   });
 
   const [patientFiles, setPatientFiles] = useState([]);
@@ -595,8 +642,7 @@ function PatientCardPage() {
     });
     getPatientFiles(id).then(setPatientFiles);
 
-    // Fetch all backend-wired categories in parallel, keep habits as-is
-    // (empty, local-only) since there's no backend for it yet.
+    // Fetch all backend-wired categories in parallel.
     const categoryKeys = Object.keys(CATEGORY_API);
     Promise.all(categoryKeys.map((key) => CATEGORY_API[key].get(id))).then(
       (results) => {
@@ -615,8 +661,8 @@ function PatientCardPage() {
     const api = CATEGORY_API[categoryKey];
 
     if (!api) {
-      // habits (or any future category without a backend yet) — keep the
-      // old local-only behavior so the UI doesn't break.
+      // Fallback for any future category added to CATEGORY_META without a
+      // backend wired up yet — keeps the UI working as local-state only.
       setExtraData((prev) => ({
         ...prev,
         [categoryKey]: [...prev[categoryKey], form],

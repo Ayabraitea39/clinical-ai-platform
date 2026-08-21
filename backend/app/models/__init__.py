@@ -22,3 +22,5 @@ from .medicalAct import (
     BillingLine,
     InsuranceCoverage,
 )
+from .chat_session import ChatSession
+from .chat_message import ChatMessage

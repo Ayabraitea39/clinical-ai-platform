@@ -1,7 +1,11 @@
 TOOL_SCHEMAS = [
     {"type": "function", "function": {
         "name": "get_patient_summary",
-        "description": "Returns a quick overview of the patient: demographics, chronic disease codes, allergy names, current medication names, and last visit date.",
+        "description":
+    "Returns a general overview of the patient including demographics, "
+    "chronic diseases, allergies, current medications, and last visit date. "
+    "Use this for general summary questions. For a specific demographic "
+    "question such as date of birth or gender, use get_patient_demographics.",
         "parameters": {"type": "object", "properties": {}, "required": []},
     }},
     {"type": "function", "function": {
@@ -9,11 +13,11 @@ TOOL_SCHEMAS = [
         "description": "Returns the patient's recorded allergies, including allergen, reaction, and severity.",
         "parameters": {"type": "object", "properties": {}, "required": []},
     }},
-    {"type": "function", "function": {
-        "name": "get_current_medications",
-        "description": "Returns medications the patient is currently taking, including dose and frequency.",
-        "parameters": {"type": "object", "properties": {}, "required": []},
-    }},
+   {"type": "function", "function": {
+    "name": "get_current_medications",
+    "description": "Returns the patient's standing list of medications they are CURRENTLY taking on an ongoing basis. Use ONLY for questions like 'what medications is he currently on' or 'what is he taking now'. Do NOT use this for 'what was he prescribed' — that refers to a specific visit's prescriptions, use get_visit_detail or get_visit_medical_acts instead.",
+    "parameters": {"type": "object", "properties": {}, "required": []},
+}},
     {"type": "function", "function": {
         "name": "get_chronic_diseases",
         "description": "Returns the patient's chronic diseases with ICD-10 code, discovery date, and notes.",
@@ -86,8 +90,6 @@ TOOL_SCHEMAS = [
     "parameters": {"type": "object", "properties": {}, "required": []},
 }},
 
-# --- Append these entries to the TOOL_SCHEMAS list in tool_schemas.py ---
-
 {"type": "function", "function": {
     "name": "get_surgical_history",
     "description": "Returns the patient's past surgical procedures, including procedure description, surgery date, and notes.",
@@ -101,6 +103,31 @@ TOOL_SCHEMAS = [
 {"type": "function", "function": {
     "name": "get_immunizations",
     "description": "Returns the patient's immunization/vaccination records, including vaccine type, age at vaccination, and whether it was taken.",
+    "parameters": {"type": "object", "properties": {}, "required": []},
+}},
+
+{
+    "type": "function",
+    "function": {
+        "name": "get_patient_demographics",
+        "description": (
+            "Returns the patient's basic demographic information: "
+            "full name, date of birth, gender, blood type, nationality, "
+            "and social status. Use this for specific questions about "
+            "the patient's name, date of birth, gender, age, blood type, "
+            "nationality, or social status."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+},
+
+{"type": "function", "function": {
+    "name": "get_habits",
+    "description": "Returns the patient's lifestyle and substance-use habits: smoking, hookah, e-cigarettes, alcohol use, and recreational drug use. Use this for questions about drug use, smoking, drinking, or substance use — NOT for questions about prescribed medications (use get_current_medications for those).",
     "parameters": {"type": "object", "properties": {}, "required": []},
 }},
 ]

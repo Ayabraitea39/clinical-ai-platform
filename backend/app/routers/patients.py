@@ -24,6 +24,9 @@ from app.schemas.patient import (
     CurrentMedicationOut,
     InsuranceCoverageCreate,
     InsuranceCoverageOut,
+    HabitCreate,
+    HabitOut,
+    HabitUpdate,
 )
 from app.crud import patient as patient_crud
 from .get_current_user import get_current_user
@@ -259,6 +262,30 @@ def remove_insurance_coverage(
     current_user=Depends(get_current_user),
 ):
     deleted = patient_crud.delete_insurance_coverage(db, entry_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return {"ok": True}
+
+
+#habits
+
+@router.get("/{patient_id}/habits/", response_model=list[HabitOut])
+def list_habits(patient_id: int, db: Session = Depends(get_db)):
+    return patient_crud.get_habits(db, patient_id)
+
+@router.post("/{patient_id}/habits/", response_model=HabitOut, status_code=201)
+def add_habit(
+    patient_id: int, payload: HabitCreate, db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    return patient_crud.create_habit(db, patient_id, payload)
+
+@router.delete("/{patient_id}/habits/{entry_id}")
+def remove_habit(
+    patient_id: int, entry_id: int, db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    deleted = patient_crud.delete_habit(db, entry_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Entry not found")
     return {"ok": True}
