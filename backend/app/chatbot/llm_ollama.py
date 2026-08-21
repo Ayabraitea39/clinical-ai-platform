@@ -1,14 +1,15 @@
 import os
 import time
+import uuid
 import requests
 from dotenv import load_dotenv
 from pathlib import Path
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
-MODEL_NAME = "mistral-small-latest"
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY")
+OLLAMA_API_URL = "https://ollama.com/api/chat"
+MODEL_NAME = os.getenv("OLLAMA_MODEL_NAME", "gpt-oss:120b")
 
 
 class LLMUnavailableError(Exception):
@@ -23,13 +24,14 @@ def call_llm(
     max_retries: int = 2,
     backoff: float = 1.5,
 ) -> dict:
-    if not MISTRAL_API_KEY:
-        raise RuntimeError("MISTRAL_API_KEY is not set in your .env file")
+    if not OLLAMA_API_KEY:
+        raise RuntimeError("OLLAMA_API_KEY is not set in your .env file")
 
     payload = {
         "model": MODEL_NAME,
         "messages": messages,
-        "temperature": temperature,
+        "stream": False,
+        "options": {"temperature": temperature},
     }
     if tools:
         payload["tools"] = tools
@@ -38,34 +40,37 @@ def call_llm(
     for attempt in range(max_retries + 1):
         try:
             response = requests.post(
-                MISTRAL_API_URL,
+                OLLAMA_API_URL,
                 headers={
-                    "Authorization": f"Bearer {MISTRAL_API_KEY}",
+                    "Authorization": f"Bearer {OLLAMA_API_KEY}",
                     "Content-Type": "application/json",
                 },
                 json=payload,
-                timeout=30,
+                timeout=60,
             )
             response.raise_for_status()
-            return response.json()["choices"][0]["message"]
+            message = response.json()["message"]
+            if message.get("tool_calls"):
+                for call in message["tool_calls"]:
+                    call.setdefault("id", str(uuid.uuid4()))
+
+            return message
 
         except requests.exceptions.HTTPError as e:
             last_error = e
             status = e.response.status_code if e.response is not None else None
-            # Retry only on transient errors (503 = overloaded, 429 = rate limited)
             if status in (503, 429) and attempt < max_retries:
-                print(f"[LLM] {status} error, retrying (attempt {attempt + 1}/{max_retries})...")
+                print(f"[LLM-Ollama] {status} error, retrying (attempt {attempt + 1}/{max_retries})...")
                 time.sleep(backoff * (attempt + 1))
                 continue
             break
 
         except requests.exceptions.RequestException as e:
-            # Network-level errors (timeout, connection refused, etc.)
             last_error = e
             if attempt < max_retries:
-                print(f"[LLM] connection error, retrying (attempt {attempt + 1}/{max_retries})...")
+                print(f"[LLM-Ollama] connection error, retrying (attempt {attempt + 1}/{max_retries})...")
                 time.sleep(backoff * (attempt + 1))
                 continue
             break
 
-    raise LLMUnavailableError(f"Mistral API unavailable after {max_retries + 1} attempts: {last_error}")
+    raise LLMUnavailableError(f"Ollama Cloud API unavailable after {max_retries + 1} attempts: {last_error}")

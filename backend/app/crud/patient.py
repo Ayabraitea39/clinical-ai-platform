@@ -8,6 +8,7 @@ from app.models.patient import (
     Immunization,
     Allergy,
     CurrentMedication,
+    Habit,
 )
 from app.schemas.patient import (
     PatientCreate,
@@ -18,6 +19,7 @@ from app.schemas.patient import (
     ImmunizationCreate,
     AllergyCreate,
     CurrentMedicationCreate,
+    HabitCreate,
     InsuranceCoverageCreate,
 )
 from app.models.medicalAct import InsuranceCoverage
@@ -220,4 +222,24 @@ def update_insurance_coverage(db: Session, entry_id: int, payload: InsuranceCove
         setattr(record, key, value)
     db.commit()
     db.refresh(record)
+    return record
+
+#habits
+
+def get_habits(db: Session, patient_id: int):
+    return db.query(Habit).filter(Habit.patient_id == patient_id).all()
+
+def create_habit(db: Session, patient_id: int, payload: HabitCreate):
+    record = Habit(**payload.model_dump(), patient_id=patient_id)
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
+
+def delete_habit(db: Session, entry_id: int):
+    record = db.query(Habit).filter(Habit.id == entry_id).first()
+    if not record:
+        return None
+    db.delete(record)
+    db.commit()
     return record

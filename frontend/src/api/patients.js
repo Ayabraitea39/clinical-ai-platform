@@ -143,3 +143,18 @@ export async function deleteInsuranceCoverage(patientId, entryId) {
   const res = await axiosClient.delete(`/patients/${patientId}/insurance-coverage/${entryId}`);
   return res.data;
 }
+
+//habits
+
+export async function getHabits(patientId) {
+  const res = await axiosClient.get(`/patients/${patientId}/habits/`);
+  return res.data;
+}
+export async function addHabit(patientId, payload) {
+  const res = await axiosClient.post(`/patients/${patientId}/habits/`, payload);
+  return res.data;
+}
+export async function deleteHabit(patientId, entryId) {
+  const res = await axiosClient.delete(`/patients/${patientId}/habits/${entryId}`);
+  return res.data;
+}
