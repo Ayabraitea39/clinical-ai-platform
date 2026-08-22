@@ -9,7 +9,7 @@ load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY")
 OLLAMA_API_URL = "https://ollama.com/api/chat"
-MODEL_NAME = os.getenv("OLLAMA_MODEL_NAME", "gpt-oss:120b")
+MODEL_NAME = os.getenv("OLLAMA_MODEL_NAME", "gpt-oss:20b")
 
 
 class LLMUnavailableError(Exception):
