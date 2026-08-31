@@ -17,13 +17,28 @@ function formatDate(dateInput) {
 }
 
 // Strips markdown emphasis markers (**, ***, *) and returns plain text —
-// no bold/italic styling, just the inner text.
+// no bold/italic styling, just the inner text. Also converts literal
+// "<br>" tags (which the model sometimes emits inside a table cell to
+// separate list items) into real line breaks instead of showing the raw
+// tag as text.
 function renderInline(content, keyPrefix) {
-  const plain = content
-    .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1');
-  return <span key={keyPrefix}>{plain}</span>;
+  const segments = content.split(/<br\s*\/?>/gi);
+  return (
+    <span key={keyPrefix}>
+      {segments.map((segment, si) => {
+        const plain = segment
+          .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\*([^*]+)\*/g, '$1');
+        return (
+          <span key={`${keyPrefix}-seg-${si}`}>
+            {si > 0 && <br />}
+            {plain}
+          </span>
+        );
+      })}
+    </span>
+  );
 }
 
 // A markdown table separator row, e.g. "|---|:--:|---|" or "| --- | --- |"
@@ -46,15 +61,13 @@ function renderFormattedText(text) {
   while (i < lines.length) {
     const line = lines[i];
 
-    // Detect a markdown table: a "| ... |" row immediately followed by a
-    // separator row ("|---|---|"). Consume every following row that still
-    // looks like a table row.
     const looksLikeRow = line.trim().startsWith('|') && line.includes('|');
-    const nextIsSeparator = i + 1 < lines.length && isTableSeparatorRow(lines[i + 1]);
+    const nextIsSeparator =
+      i + 1 < lines.length && isTableSeparatorRow(lines[i + 1]);
 
     if (looksLikeRow && nextIsSeparator) {
       const headerCells = splitTableRow(line);
-      i += 2; // skip header + separator row
+      i += 2;
 
       const bodyRows = [];
       while (i < lines.length && lines[i].trim().startsWith('|')) {
@@ -62,9 +75,6 @@ function renderFormattedText(text) {
         i += 1;
       }
 
-      // Simple stacked format: first column becomes a bold label, the
-      // remaining columns render underneath as "Header: value" lines.
-      // No grid/borders — just plain, readable text.
       blocks.push(
         <div className="chat-table-simple" key={`table-${blocks.length}`}>
           {bodyRows.map((row, ri) => (
@@ -72,10 +82,15 @@ function renderFormattedText(text) {
               <div className="chat-table-simple-label">
                 {renderInline(row[0] || '', `label-${blocks.length}-${ri}`)}
               </div>
+
               {row.slice(1).map((cell, ci) => (
                 <div className="chat-table-simple-line" key={ci}>
                   <span className="chat-table-simple-key">
-                    {renderInline(headerCells[ci + 1] || '', `key-${blocks.length}-${ri}-${ci}`)}:
+                    {renderInline(
+                      headerCells[ci + 1] || '',
+                      `key-${blocks.length}-${ri}-${ci}`
+                    )}
+                    :
                   </span>{' '}
                   {renderInline(cell, `cell-${blocks.length}-${ri}-${ci}`)}
                 </div>
@@ -84,19 +99,36 @@ function renderFormattedText(text) {
           ))}
         </div>
       );
+
       continue;
     }
 
-    // Not a table row — render as a normal (possibly heading) line.
+    const trimmed = line.trim();
     const headingMatch = line.match(/^#{1,6}\s+(.*)/);
     const content = headingMatch ? headingMatch[1] : line;
+
+    const isSafetyHeading =
+      /^#{0,6}\s*Clinical Safety Check:?\s*$/i.test(trimmed) ||
+      /^Clinical Safety Check:?\s*$/i.test(content.trim());
+
+    const isWarning = /^(?:[-•*]\s*)?(?:\*\*)?Warning(?:\*\*)?:/i.test(trimmed);
+
     const rendered = renderInline(content, `line-${blocks.length}`);
 
+    const lineClassName = [
+      'chat-text-line',
+      isSafetyHeading ? 'chat-clinical-safety-heading' : '',
+      isWarning ? 'chat-clinical-warning' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
     blocks.push(
-      <div className="chat-text-line" key={`line-${blocks.length}`}>
-        {headingMatch ? <strong>{rendered}</strong> : rendered}
+      <div className={lineClassName} key={`line-${blocks.length}`}>
+        {headingMatch || isSafetyHeading ? <strong>{rendered}</strong> : rendered}
       </div>
     );
+
     i += 1;
   }
 

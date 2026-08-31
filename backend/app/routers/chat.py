@@ -4,7 +4,8 @@ from sqlalchemy import select
 from pydantic import BaseModel
 import datetime
 from app.database import get_db
-from app.chatbot.orchestrator import chat_with_patient_context
+from app.chatbot.engine import chat_with_entity_context
+from app.chatbot.active_domain import ACTIVE_CONFIG
 from app.models.chat_message import ChatMessage
 from app.models.chat_session import ChatSession
 
@@ -92,7 +93,7 @@ def chat(patient_id: int, session_id: int, request: ChatRequest, db: Session = D
     session.updated_at = datetime.datetime.utcnow()
     db.commit()
 
-    reply = chat_with_patient_context(db, patient_id=patient_id, question=request.message)
+    reply = chat_with_entity_context(db, question=request.message, config=ACTIVE_CONFIG, entity_id=patient_id)
 
     db.add(ChatMessage(session_id=session_id, patient_id=patient_id, role="assistant", content=reply))
     session.updated_at = datetime.datetime.utcnow()
