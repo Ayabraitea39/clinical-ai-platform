@@ -6,16 +6,17 @@ from app.models import MedicalAct, ActClassification
 
 MEDICAL_ACTS = [
     # ---------------- MEDICINE ----------------
-    ("Amoxicillin 500mg", ActClassification.medicine),
-    ("Paracetamol 500mg", ActClassification.medicine),
-    ("Ibuprofen 400mg", ActClassification.medicine),
-    ("Metformin 500mg", ActClassification.medicine),
-    ("Amlodipine 5mg", ActClassification.medicine),
-    ("Omeprazole 20mg", ActClassification.medicine),
-    ("Atorvastatin 20mg", ActClassification.medicine),
-    ("Azithromycin 250mg", ActClassification.medicine),
-    ("Cetirizine 10mg", ActClassification.medicine),
-    ("Salbutamol Inhaler 100mcg", ActClassification.medicine),
+    ("Amoxicillin ", ActClassification.medicine),
+    ("Paracetamol ", ActClassification.medicine),
+    ("Ibuprofen ", ActClassification.medicine),
+    ("Metformin ", ActClassification.medicine),
+    ("Amlodipine ", ActClassification.medicine),
+    ("Omeprazole ", ActClassification.medicine),
+    ("Atorvastatin ", ActClassification.medicine),
+    ("Azithromycin ", ActClassification.medicine),
+    ("Cetirizine ", ActClassification.medicine),
+    ("Salbutamol Inhaler ", ActClassification.medicine),
+    ("Propranolol  ", ActClassification.medicine),
 
     # ---------------- TEST ----------------
     ("Complete Blood Count (CBC)", ActClassification.test),
