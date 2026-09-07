@@ -1,5 +1,6 @@
+from typing import Optional
 from sqlalchemy.orm import Session
-from app.chatbot.domain_config import DomainConfig
+from app.chatbot.engine import BaseDomainAssistant
 from app.domains.clinic.tool_schemas import TOOL_SCHEMAS
 from app.domains.clinic import tools as tool_funcs
 from app.models.identity import Patient
@@ -44,12 +45,12 @@ CLINIC_RULES = (
     "were recorded' without first checking each visit's individual vitals "
     "fields, not just a summary tool's top-level output.\n"
 
-"   b) Only skip a vital sign if it is genuinely absent from at least "
-"one of the visits being compared. When a vital is recorded in only one "
-"of the two visits, note it separately using the format "
-"'- [Vital sign]: [value] (recorded only on [date])' — never use the "
-"'[old] → [new]' arrow format or a direction label for a vital that "
-"isn't present in both visits.\n"
+    "   b) Only skip a vital sign if it is genuinely absent from at least "
+    "one of the visits being compared. When a vital is recorded in only one "
+    "of the two visits, note it separately using the format "
+    "'- [Vital sign]: [value] (recorded only on [date])' — never use the "
+    "'[old] → [new]' arrow format or a direction label for a vital that "
+    "isn't present in both visits.\n"
 
     "   c) Use this exact format for each vital sign trend: "
     "'- [Vital sign]: [old value] → [new value] ([Increasing/Decreasing/Stable])'. "
@@ -87,25 +88,16 @@ AVAILABLE_FUNCTIONS = {
 }
 
 
-def _get_patient_name(db: Session, patient_id: int):
-    patient = db.get(Patient, patient_id)
-    return patient.full_name if patient else None
-
-
-# gets the data from the database
 def _fetch_safety_data(db: Session, patient_id: int) -> dict:
     """
-    One deterministic database fetch, reused for both (a) the context
-    handed to the LLM up front and (b) the guaranteed snapshot appended at
-    the end — so both are guaranteed to say the exact same thing.
+    One deterministic database fetch, used to build the guaranteed
+    snapshot appended after every answer.
 
     EXPERIMENTAL ADDITIONS (testing whether more context helps rule 6):
     - habits: smoking/alcohol/drug use — affects real prescribing decisions
-      (e.g. alcohol + Paracetamol raises liver toxicity risk) and wasn't
-      visible to the model before.
-    - recent_visit: the most recent visit's conclusion + vital signs — a
-      freshly noted issue or abnormal vital that hasn't been formally
-      coded as a chronic disease yet would otherwise be invisible.
+      (e.g. alcohol + Paracetamol raises liver toxicity risk).
+    - recent_visit: kept as a local var for future use, not yet folded
+      into the snapshot output below.
     """
     recent_visit = tool_funcs.get_visit_detail(db, patient_id=patient_id)
     return {
@@ -114,10 +106,9 @@ def _fetch_safety_data(db: Session, patient_id: int) -> dict:
         "chronic_diseases": tool_funcs.get_chronic_diseases(db, patient_id=patient_id),
         "surgical_history": tool_funcs.get_surgical_history(db, patient_id=patient_id),
         "habits": tool_funcs.get_habits(db, patient_id=patient_id),
-       
     }
 
-#turns that into the text block you see at the bottom of every answer
+
 def _format_safety_snapshot(data: dict, heading: str) -> str:
     def _join(items, formatter):
         values = [formatter(item) for item in items]
@@ -129,16 +120,9 @@ def _format_safety_snapshot(data: dict, heading: str) -> str:
         reaction = str(allergy.get("reaction") or "").strip()
 
         placeholder_reactions = {
-            "",
-            "not recorded",
-            "none",
-            "unknown",
-            "n/a",
-            "na",
-            "not specified",
+            "", "not recorded", "none", "unknown", "n/a", "na", "not specified",
         }
 
-        # Keep the allergy itself even when the reaction was never recorded.
         if reaction.lower() in placeholder_reactions:
             return allergen or "Unknown allergy"
 
@@ -177,7 +161,6 @@ def _format_safety_snapshot(data: dict, heading: str) -> str:
     )
     habits_line = _format_habits(data.get("habits"))
 
-
     return (
         f"{heading}\n"
         f"- Allergies: {allergies_line}\n"
@@ -188,24 +171,36 @@ def _format_safety_snapshot(data: dict, heading: str) -> str:
     )
 
 
-# uses that data and formats it into text
-def _clinic_safety_check(db: Session, patient_id: int, answer_text: str):
-    """safety_check hook: guaranteed snapshot appended AFTER the LLM
-    answers, independent of the LLM — always shown, regardless of what the
-    model did or didn't mention in its own warning bullets. No pre-fetch
-    injection anymore — the model relies purely on rule 6 and its own tool
-    calls to reason about safety; this is only the guaranteed display."""
-    data = _fetch_safety_data(db, patient_id)
-    return _format_safety_snapshot(data, heading="## Patient Safety Snapshot")
+class ClinicAssistant(BaseDomainAssistant):
+    """The clinic's own implementation of BaseDomainAssistant. The base
+    class supplies the tool-calling loop, the patient-scoping guards, and
+    the system prompt assembly — everything below is clinic-specific."""
 
-CLINIC_CONFIG = DomainConfig(
-    has_scoped_entity=True,
-    entity_label="patient",
-    entity_id_param="patient_id",
-    get_entity_name=_get_patient_name,
-    has_personal_name=True,
-    system_prompt_rules=CLINIC_RULES,
-    available_functions=AVAILABLE_FUNCTIONS,
-    tool_schemas=TOOL_SCHEMAS,
-    safety_check=_clinic_safety_check,
-)
+    entity_label = "patient"
+    entity_id_param = "patient_id"
+
+    @property
+    def available_functions(self) -> dict:
+        return AVAILABLE_FUNCTIONS
+
+    @property
+    def tool_schemas(self) -> list:
+        return TOOL_SCHEMAS
+
+    @property
+    def system_prompt_rules(self) -> str:
+        return CLINIC_RULES
+
+    def get_entity_name(self, db: Session, entity_id: int) -> Optional[str]:
+        patient = db.get(Patient, entity_id)
+        return patient.full_name if patient else None
+
+    def safety_check(self, db: Session, entity_id: int, answer_text: str) -> Optional[str]:
+        """Guaranteed snapshot appended AFTER the LLM answers, independent
+        of the LLM — always shown, regardless of what the model did or
+        didn't mention in its own warning bullets."""
+        data = _fetch_safety_data(db, entity_id)
+        return _format_safety_snapshot(data, heading="## Patient Safety Snapshot")
+
+
+CLINIC_ASSISTANT = ClinicAssistant()
